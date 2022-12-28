@@ -18,8 +18,8 @@ impl Cipher for Simple {
         let mut iter = data.iter();
         loop {
             match (iter.next(), iter.next()) {
-                (Some(c1), Some(c2)) => result.push_str(&Self::encrypt_char_pair(c1, c2)?),
-                (Some(c1), None) => result.push_str(&Self::encrypt_single_char(c1)?),
+                (Some(c0), Some(c1)) => result.push_str(&Self::encrypt_char_pair(c0, c1)?),
+                (Some(c0), None) => result.push_str(&Self::encrypt_single_char(c0)?),
                 _ => return Ok(result),
             }
         }
@@ -30,8 +30,8 @@ impl Cipher for Simple {
         let mut iter = data.iter();
         loop {
             match (iter.next(), iter.next(), iter.next()) {
-                (Some(b1), Some(b2), Some(b3)) => {
-                    result.push_str(&Self::decrypt_chars(b1, b2, b3)?)
+                (Some(b0), Some(b1), Some(b2)) => {
+                    result.push_str(&Self::decrypt_chars(b0, b1, b2)?)
                 }
                 _ => return Ok(result),
             }
@@ -40,58 +40,58 @@ impl Cipher for Simple {
 }
 
 impl Simple {
-    fn encrypt_char_pair(c1: &u8, c2: &u8) -> Result<String, FromUtf8Error> {
-        let high_1 = c1 & SIG_BIT_MASK;
-        let high_2 = c2 & SIG_BIT_MASK;
-        let low_1 = c1 & LOWER_BITS_MASK;
-        let low_2 = c2 & LOWER_BITS_MASK;
-        let b1 = 224 | (high_1 >> 5) | (high_2 >> 6);
-        let b2 = 128 | low_1;
-        let b3 = 128 | low_2;
-        // println!("Chars: {c1:b} {c2:b}");
-        // println!("Bytes: {b1:b} {b2:b} {b3:b}");
+    fn encrypt_char_pair(c0: &u8, c1: &u8) -> Result<String, FromUtf8Error> {
+        let high_1 = c0 & SIG_BIT_MASK;
+        let high_2 = c1 & SIG_BIT_MASK;
+        let low_1 = c0 & LOWER_BITS_MASK;
+        let low_2 = c1 & LOWER_BITS_MASK;
+        let b0 = 224 | (high_1 >> 5) | (high_2 >> 6);
+        let b1 = 128 | low_1;
+        let b2 = 128 | low_2;
+        // println!("Chars: {c0:b} {c1:b}");
+        // println!("Bytes: {b0:b} {b1:b} {b2:b}");
 
-        let encyrpted_char = vec![b1, b2, b3];
+        let encyrpted_char = vec![b0, b1, b2];
         String::from_utf8(encyrpted_char)
     }
 
-    fn encrypt_single_char(c1: &u8) -> Result<String, FromUtf8Error> {
-        let high_1 = c1 & SIG_BIT_MASK;
-        let low_1 = c1 & LOWER_BITS_MASK;
-        let b1 = 224 | SINGLE_CHAR_MASK | (high_1 >> 6);
-        let b2 = 128 | low_1;
-        let b3 = 128;
-        // println!("Chars: {c1:b}");
-        // println!("Bytes: {b1:b} {b2:b} {b3:b}");
+    fn encrypt_single_char(c0: &u8) -> Result<String, FromUtf8Error> {
+        let high_1 = c0 & SIG_BIT_MASK;
+        let low_1 = c0 & LOWER_BITS_MASK;
+        let b0 = 224 | SINGLE_CHAR_MASK | (high_1 >> 6);
+        let b1 = 128 | low_1;
+        let b2 = 128;
+        // println!("Chars: {c0:b}");
+        // println!("Bytes: {b0:b} {b1:b} {b2:b}");
 
-        let encyrpted_char = vec![b1, b2, b3];
+        let encyrpted_char = vec![b0, b1, b2];
         String::from_utf8(encyrpted_char)
     }
 
-    fn decrypt_chars(b1: &u8, b2: &u8, b3: &u8) -> Result<String> {
-        if b1 & SINGLE_CHAR_MASK != 0 {
-            Self::decrypt_single_char(b1, b2)
+    fn decrypt_chars(b0: &u8, b1: &u8, b2: &u8) -> Result<String> {
+        if b0 & SINGLE_CHAR_MASK != 0 {
+            Self::decrypt_single_char(b0, b1)
         } else {
-            Self::decrypt_char_pair(b1, b2, b3)
+            Self::decrypt_char_pair(b0, b1, b2)
         }
     }
 
-    fn decrypt_single_char(b1: &u8, b2: &u8) -> Result<String> {
-        let sig_bit = (b1 & 1) << 6;
-        let lower = b2 & LOWER_BITS_MASK;
+    fn decrypt_single_char(b0: &u8, b1: &u8) -> Result<String> {
+        let sig_bit = (b0 & 1) << 6;
+        let lower = b1 & LOWER_BITS_MASK;
         let ascii_char = sig_bit | lower;
         Ok(String::from_utf8(vec![ascii_char])?)
     }
 
-    fn decrypt_char_pair(b1: &u8, b2: &u8, b3: &u8) -> Result<String> {
-        let c1_sig_bit = (b1 & 2) << 5;
-        let c2_sig_bit = (b1 & 1) << 6;
+    fn decrypt_char_pair(b0: &u8, b1: &u8, b2: &u8) -> Result<String> {
+        let c0_sig_bit = (b0 & 2) << 5;
+        let c1_sig_bit = (b0 & 1) << 6;
+        let c0_lower = b1 & LOWER_BITS_MASK;
         let c1_lower = b2 & LOWER_BITS_MASK;
-        let c2_lower = b3 & LOWER_BITS_MASK;
 
+        let c0 = c0_sig_bit | c0_lower;
         let c1 = c1_sig_bit | c1_lower;
-        let c2 = c2_sig_bit | c2_lower;
-        Ok(String::from_utf8(vec![c1, c2])?)
+        Ok(String::from_utf8(vec![c0, c1])?)
     }
 }
 
