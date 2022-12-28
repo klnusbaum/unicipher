@@ -1,5 +1,4 @@
 use anyhow::Result;
-use std::string::FromUtf8Error;
 
 const SIG_BIT_MASK: u8 = 127;
 const LOWER_BITS_MASK: u8 = 63;
@@ -40,7 +39,7 @@ impl Cipher for Simple {
 }
 
 impl Simple {
-    fn encrypt_char_pair(c0: &u8, c1: &u8) -> Result<String, FromUtf8Error> {
+    fn encrypt_char_pair(c0: &u8, c1: &u8) -> Result<String> {
         let high_1 = c0 & SIG_BIT_MASK;
         let high_2 = c1 & SIG_BIT_MASK;
         let low_1 = c0 & LOWER_BITS_MASK;
@@ -52,10 +51,10 @@ impl Simple {
         // println!("Bytes: {b0:b} {b1:b} {b2:b}");
 
         let encyrpted_char = vec![b0, b1, b2];
-        String::from_utf8(encyrpted_char)
+        Ok(String::from_utf8(encyrpted_char)?)
     }
 
-    fn encrypt_single_char(c0: &u8) -> Result<String, FromUtf8Error> {
+    fn encrypt_single_char(c0: &u8) -> Result<String> {
         let high_1 = c0 & SIG_BIT_MASK;
         let low_1 = c0 & LOWER_BITS_MASK;
         let b0 = 224 | SINGLE_CHAR_MASK | (high_1 >> 6);
@@ -65,7 +64,7 @@ impl Simple {
         // println!("Bytes: {b0:b} {b1:b} {b2:b}");
 
         let encyrpted_char = vec![b0, b1, b2];
-        String::from_utf8(encyrpted_char)
+        Ok(String::from_utf8(encyrpted_char)?)
     }
 
     fn decrypt_chars(b0: &u8, b1: &u8, b2: &u8) -> Result<String> {
