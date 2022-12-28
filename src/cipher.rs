@@ -1,3 +1,5 @@
+use std::io::{Cursor, Read, Write};
+
 use anyhow::Result;
 
 const SIG_BIT_MASK: u8 = 127;
@@ -5,26 +7,21 @@ const LOWER_BITS_MASK: u8 = 63;
 const SINGLE_CHAR_MASK: u8 = 4;
 
 pub trait Cipher {
-    fn encrypt(&self, data: &[u8]) -> Result<String>;
-    fn decrypt(&self, data: &[u8]) -> Result<String>;
+    fn encrypt_to_string(&self, data: &[u8]) -> Result<String>;
+    fn decrypt_to_string(&self, data: &[u8]) -> Result<String>;
+    fn encrypt(&self, data: &mut impl Read, out: &mut impl Write) -> Result<()>;
 }
 
 pub struct Simple {}
 
 impl Cipher for Simple {
-    fn encrypt(&self, data: &[u8]) -> Result<String> {
-        let mut result = new_encrypt_buffer(data);
-        let mut iter = data.iter();
-        loop {
-            match (iter.next(), iter.next()) {
-                (Some(c0), Some(c1)) => result.push_str(&Self::encrypt_char_pair(c0, c1)?),
-                (Some(c0), None) => result.push_str(&Self::encrypt_single_char(c0)?),
-                _ => return Ok(result),
-            }
-        }
+    fn encrypt_to_string(&self, data: &[u8]) -> Result<String> {
+        let mut result = Vec::with_capacity(encrypt_size(&data));
+        self.encrypt(&mut Cursor::new(data), &mut result)?;
+        Ok(String::from_utf8(result)?)
     }
 
-    fn decrypt(&self, data: &[u8]) -> Result<String> {
+    fn decrypt_to_string(&self, data: &[u8]) -> Result<String> {
         let mut result = new_decrypt_buffer(data);
         let mut iter = data.iter();
         loop {
@@ -36,35 +33,47 @@ impl Cipher for Simple {
             }
         }
     }
+
+    fn encrypt(&self, data: &mut impl Read, out: &mut impl Write) -> Result<()> {
+        let c0 = &mut [0];
+        let c1 = &mut [0];
+        loop {
+            let n0 = data.read(c0)?;
+            let n1 = data.read(c1)?;
+            match (n0, n1) {
+                (1, 1) => Self::encrypt_char_pair(c0[0], c1[0], out)?,
+                (1, 0) => Self::encrypt_single_char(c0[0], out)?,
+                _ => return Ok(()),
+            };
+        }
+    }
 }
 
 impl Simple {
-    fn encrypt_char_pair(c0: &u8, c1: &u8) -> Result<String> {
+    fn encrypt_char_pair(c0: u8, c1: u8, out: &mut impl Write) -> Result<()> {
+        let encrypted_char: &mut [u8] = &mut [0, 0, 0];
         let high_1 = c0 & SIG_BIT_MASK;
         let high_2 = c1 & SIG_BIT_MASK;
         let low_1 = c0 & LOWER_BITS_MASK;
         let low_2 = c1 & LOWER_BITS_MASK;
-        let b0 = 224 | (high_1 >> 5) | (high_2 >> 6);
-        let b1 = 128 | low_1;
-        let b2 = 128 | low_2;
+        encrypted_char[0] = 224 | (high_1 >> 5) | (high_2 >> 6);
+        encrypted_char[1] = 128 | low_1;
+        encrypted_char[2] = 128 | low_2;
         // println!("Chars: {c0:b} {c1:b}");
         // println!("Bytes: {b0:b} {b1:b} {b2:b}");
-
-        let encyrpted_char = vec![b0, b1, b2];
-        Ok(String::from_utf8(encyrpted_char)?)
+        Ok(out.write_all(&encrypted_char)?)
     }
 
-    fn encrypt_single_char(c0: &u8) -> Result<String> {
+    fn encrypt_single_char(c0: u8, out: &mut impl Write) -> Result<()> {
+        let encrypted_char: &mut [u8] = &mut [0, 0, 0];
         let high_1 = c0 & SIG_BIT_MASK;
         let low_1 = c0 & LOWER_BITS_MASK;
-        let b0 = 224 | SINGLE_CHAR_MASK | (high_1 >> 6);
-        let b1 = 128 | low_1;
-        let b2 = 128;
+        encrypted_char[0] = 224 | SINGLE_CHAR_MASK | (high_1 >> 6);
+        encrypted_char[1] = 128 | low_1;
+        encrypted_char[2] = 128;
         // println!("Chars: {c0:b}");
         // println!("Bytes: {b0:b} {b1:b} {b2:b}");
-
-        let encyrpted_char = vec![b0, b1, b2];
-        Ok(String::from_utf8(encyrpted_char)?)
+        Ok(out.write_all(&encrypted_char)?)
     }
 
     fn decrypt_chars(b0: &u8, b1: &u8, b2: &u8) -> Result<String> {
@@ -92,12 +101,6 @@ impl Simple {
         let c1 = c1_sig_bit | c1_lower;
         Ok(String::from_utf8(vec![c0, c1])?)
     }
-}
-
-fn new_encrypt_buffer(data: &[u8]) -> String {
-    let mut buffer = String::new();
-    buffer.reserve(encrypt_size(data));
-    return buffer;
 }
 
 fn encrypt_size(data: &[u8]) -> usize {
@@ -129,23 +132,35 @@ mod simple_tests {
     #[test]
     fn single_char_pair() {
         let cipher = Simple {};
-        let res = cipher.encrypt("ad".as_bytes()).expect("must succeed");
+        let res = cipher
+            .encrypt_to_string("ad".as_bytes())
+            .expect("must succeed");
         assert_eq!(res, "㡤");
-        let decrypted = cipher.decrypt(res.as_bytes()).expect("must succeed");
+        let decrypted = cipher
+            .decrypt_to_string(res.as_bytes())
+            .expect("must succeed");
         assert_eq!(decrypted, "ad");
 
-        let res = cipher.encrypt("gc".as_bytes()).expect("must succeed");
+        let res = cipher
+            .encrypt_to_string("gc".as_bytes())
+            .expect("must succeed");
         assert_eq!(res, "㧣");
-        let decrypted = cipher.decrypt(res.as_bytes()).expect("must succeed");
+        let decrypted = cipher
+            .decrypt_to_string(res.as_bytes())
+            .expect("must succeed");
         assert_eq!(decrypted, "gc");
     }
 
     #[test]
     fn even_length_string() {
         let cipher = Simple {};
-        let res = cipher.encrypt("adgc".as_bytes()).expect("must succeed");
+        let res = cipher
+            .encrypt_to_string("adgc".as_bytes())
+            .expect("must succeed");
         assert_eq!(res, "㡤㧣");
-        let decrypted = cipher.decrypt(res.as_bytes()).expect("must succeed");
+        let decrypted = cipher
+            .decrypt_to_string(res.as_bytes())
+            .expect("must succeed");
         assert_eq!(decrypted, "adgc");
     }
 }
