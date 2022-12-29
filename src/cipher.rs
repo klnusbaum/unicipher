@@ -9,7 +9,7 @@ const SINGLE_CHAR_MASK: u8 = 4;
 pub trait Cipher {
     fn encrypt_to_string(&self, data: &[u8]) -> Result<String>;
     fn decrypt_to_string(&self, data: &[u8]) -> Result<String>;
-    fn encrypt(&self, data: &mut impl Read, out: &mut impl Write) -> Result<()>;
+    fn encrypt(&self, data: impl Read, out: &mut impl Write) -> Result<()>;
 }
 
 pub struct Simple {}
@@ -34,14 +34,12 @@ impl Cipher for Simple {
         }
     }
 
-    fn encrypt(&self, data: &mut impl Read, out: &mut impl Write) -> Result<()> {
-        let ascii_chars = &mut [0, 0];
+    fn encrypt(&self, data: impl Read, out: &mut impl Write) -> Result<()> {
+        let mut bytes = data.bytes();
         loop {
-            let n0 = data.read(&mut ascii_chars[0..1])?;
-            let n1 = data.read(&mut ascii_chars[1..2])?;
-            match (n0, n1) {
-                (1, 1) => Self::encrypt_ascii_char_pair(ascii_chars[0], ascii_chars[1], out)?,
-                (1, 0) => Self::encrypt_single_ascii_char(ascii_chars[0], out)?,
+            match (bytes.next(), bytes.next()) {
+                (Some(c0), Some(c1)) => Self::encrypt_ascii_char_pair(c0?, c1?, out)?,
+                (Some(c0), None) => Self::encrypt_single_ascii_char(c0?, out)?,
                 _ => return Ok(()),
             };
         }
