@@ -50,7 +50,7 @@ impl Cipher for Simple {
 
 impl Simple {
     fn encrypt_ascii_char_pair(c0: u8, c1: u8, out: &mut impl Write) -> Result<()> {
-        let encrypted_char: &mut [u8] = &mut [0, 0, 0];
+        let encrypted_char = &mut [0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
         let sig_1 = c1 & SIG_BIT_MASK;
         let low_0 = c0 & LOWER_BITS_MASK;
@@ -60,11 +60,11 @@ impl Simple {
         encrypted_char[2] = 128 | low_1;
         // println!("Chars: {c0:b} {c1:b}");
         // println!("Bytes: {b0:b} {b1:b} {b2:b}");
-        Ok(out.write_all(&encrypted_char)?)
+        Ok(out.write_all(encrypted_char)?)
     }
 
     fn encrypt_single_ascii_char(c0: u8, out: &mut impl Write) -> Result<()> {
-        let encrypted_char: &mut [u8] = &mut [0, 0, 0];
+        let encrypted_char = &mut [0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
         let low_0 = c0 & LOWER_BITS_MASK;
         encrypted_char[0] = 224 | SINGLE_CHAR_MASK | (sig_0 >> 6);
@@ -72,7 +72,7 @@ impl Simple {
         encrypted_char[2] = 128;
         // println!("Chars: {c0:b}");
         // println!("Bytes: {b0:b} {b1:b} {b2:b}");
-        Ok(out.write_all(&encrypted_char)?)
+        Ok(out.write_all(encrypted_char)?)
     }
 
     fn decrypt_chars(b0: &u8, b1: &u8, b2: &u8) -> Result<String> {
