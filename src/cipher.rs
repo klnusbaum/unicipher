@@ -35,14 +35,13 @@ impl Cipher for Simple {
     }
 
     fn encrypt(&self, data: &mut impl Read, out: &mut impl Write) -> Result<()> {
-        let c0 = &mut [0];
-        let c1 = &mut [0];
+        let ascii_chars = &mut [0, 0];
         loop {
-            let n0 = data.read(c0)?;
-            let n1 = data.read(c1)?;
+            let n0 = data.read(&mut ascii_chars[0..1])?;
+            let n1 = data.read(&mut ascii_chars[1..2])?;
             match (n0, n1) {
-                (1, 1) => Self::encrypt_char_pair(c0[0], c1[0], out)?,
-                (1, 0) => Self::encrypt_single_char(c0[0], out)?,
+                (1, 1) => Self::encrypt_ascii_char_pair(ascii_chars[0], ascii_chars[1], out)?,
+                (1, 0) => Self::encrypt_single_ascii_char(ascii_chars[0], out)?,
                 _ => return Ok(()),
             };
         }
@@ -50,7 +49,7 @@ impl Cipher for Simple {
 }
 
 impl Simple {
-    fn encrypt_char_pair(c0: u8, c1: u8, out: &mut impl Write) -> Result<()> {
+    fn encrypt_ascii_char_pair(c0: u8, c1: u8, out: &mut impl Write) -> Result<()> {
         let encrypted_char: &mut [u8] = &mut [0, 0, 0];
         let high_1 = c0 & SIG_BIT_MASK;
         let high_2 = c1 & SIG_BIT_MASK;
@@ -64,7 +63,7 @@ impl Simple {
         Ok(out.write_all(&encrypted_char)?)
     }
 
-    fn encrypt_single_char(c0: u8, out: &mut impl Write) -> Result<()> {
+    fn encrypt_single_ascii_char(c0: u8, out: &mut impl Write) -> Result<()> {
         let encrypted_char: &mut [u8] = &mut [0, 0, 0];
         let high_1 = c0 & SIG_BIT_MASK;
         let low_1 = c0 & LOWER_BITS_MASK;
