@@ -1,13 +1,12 @@
-use crate::cipher::Cipher;
-use anyhow::Result;
-
 mod cipher;
 
+use anyhow::Result;
+use cipher::simple;
+
 fn main() -> Result<()> {
-    let cipher = cipher::Simple {};
-    let encrypted = cipher.encrypt_to_string("adgc".as_bytes())?;
+    let encrypted = simple::encrypt_to_string("adgc".as_bytes())?;
     println!("Encrytped is: '{}'", encrypted);
-    let decrypted = cipher.decrypt_to_string(encrypted.as_bytes())?;
+    let decrypted = simple::decrypt_to_string(encrypted.as_bytes())?;
     println!("Decrypted is: '{}'", decrypted);
     Ok(())
 }
