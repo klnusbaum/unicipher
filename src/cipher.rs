@@ -58,8 +58,6 @@ impl Simple {
         encrypted_char[0] = 224 | (sig_0 >> 5) | (sig_1 >> 6);
         encrypted_char[1] = 128 | low_0;
         encrypted_char[2] = 128 | low_1;
-        // println!("Chars: {c0:b} {c1:b}");
-        // println!("Bytes: {b0:b} {b1:b} {b2:b}");
         Ok(out.write_all(encrypted_char)?)
     }
 
@@ -70,8 +68,6 @@ impl Simple {
         encrypted_char[0] = 224 | SINGLE_CHAR_MASK | (sig_0 >> 6);
         encrypted_char[1] = 128 | low_0;
         encrypted_char[2] = 128;
-        // println!("Chars: {c0:b}");
-        // println!("Bytes: {b0:b} {b1:b} {b2:b}");
         Ok(out.write_all(encrypted_char)?)
     }
 
