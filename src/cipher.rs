@@ -51,13 +51,13 @@ impl Cipher for Simple {
 impl Simple {
     fn encrypt_ascii_char_pair(c0: u8, c1: u8, out: &mut impl Write) -> Result<()> {
         let encrypted_char: &mut [u8] = &mut [0, 0, 0];
-        let high_1 = c0 & SIG_BIT_MASK;
-        let high_2 = c1 & SIG_BIT_MASK;
-        let low_1 = c0 & LOWER_BITS_MASK;
-        let low_2 = c1 & LOWER_BITS_MASK;
-        encrypted_char[0] = 224 | (high_1 >> 5) | (high_2 >> 6);
-        encrypted_char[1] = 128 | low_1;
-        encrypted_char[2] = 128 | low_2;
+        let sig_0 = c0 & SIG_BIT_MASK;
+        let sig_1 = c1 & SIG_BIT_MASK;
+        let low_0 = c0 & LOWER_BITS_MASK;
+        let low_1 = c1 & LOWER_BITS_MASK;
+        encrypted_char[0] = 224 | (sig_0 >> 5) | (sig_1 >> 6);
+        encrypted_char[1] = 128 | low_0;
+        encrypted_char[2] = 128 | low_1;
         // println!("Chars: {c0:b} {c1:b}");
         // println!("Bytes: {b0:b} {b1:b} {b2:b}");
         Ok(out.write_all(&encrypted_char)?)
@@ -65,10 +65,10 @@ impl Simple {
 
     fn encrypt_single_ascii_char(c0: u8, out: &mut impl Write) -> Result<()> {
         let encrypted_char: &mut [u8] = &mut [0, 0, 0];
-        let high_1 = c0 & SIG_BIT_MASK;
-        let low_1 = c0 & LOWER_BITS_MASK;
-        encrypted_char[0] = 224 | SINGLE_CHAR_MASK | (high_1 >> 6);
-        encrypted_char[1] = 128 | low_1;
+        let sig_0 = c0 & SIG_BIT_MASK;
+        let low_0 = c0 & LOWER_BITS_MASK;
+        encrypted_char[0] = 224 | SINGLE_CHAR_MASK | (sig_0 >> 6);
+        encrypted_char[1] = 128 | low_0;
         encrypted_char[2] = 128;
         // println!("Chars: {c0:b}");
         // println!("Bytes: {b0:b} {b1:b} {b2:b}");
