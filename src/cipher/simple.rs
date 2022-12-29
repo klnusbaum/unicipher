@@ -142,11 +142,6 @@ mod simple_tests {
         assert_eq!(res, "㡤");
         let decrypted = decrypt_string(&res).expect("must succeed");
         assert_eq!(decrypted, "ad");
-
-        let res = encrypt_string("gc").expect("must succeed");
-        assert_eq!(res, "㧣");
-        let decrypted = decrypt_string(&res).expect("must succeed");
-        assert_eq!(decrypted, "gc");
     }
 
     #[test]
@@ -155,5 +150,21 @@ mod simple_tests {
         assert_eq!(res, "㡤㧣");
         let decrypted = decrypt_string(&res).expect("must succeed");
         assert_eq!(decrypted, "adgc");
+    }
+
+    #[test]
+    fn odd_length_string() {
+        let res = encrypt_string("bbb").expect("must succeed");
+        assert_eq!(res, "㢢墀");
+        let decrypted = decrypt_string(&res).expect("must succeed");
+        assert_eq!(decrypted, "bbb");
+    }
+
+    #[test]
+    fn single_char_string() {
+        let res = encrypt_string("x").expect("must succeed");
+        assert_eq!(res, "帀");
+        let decrypted = decrypt_string(&res).expect("must succeed");
+        assert_eq!(decrypted, "x");
     }
 }
