@@ -134,25 +134,26 @@ fn decrypt_size(data: &[u8]) -> usize {
 
 #[cfg(test)]
 mod simple_tests {
+    use super::{decrypt_string, encrypt_string};
 
     #[test]
     fn single_char_pair() {
-        let res = super::encrypt_string("ad").expect("must succeed");
+        let res = encrypt_string("ad").expect("must succeed");
         assert_eq!(res, "㡤");
-        let decrypted = super::decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res).expect("must succeed");
         assert_eq!(decrypted, "ad");
 
-        let res = super::encrypt_string("gc").expect("must succeed");
+        let res = encrypt_string("gc").expect("must succeed");
         assert_eq!(res, "㧣");
-        let decrypted = super::decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res).expect("must succeed");
         assert_eq!(decrypted, "gc");
     }
 
     #[test]
     fn even_length_string() {
-        let res = super::encrypt_string("adgc").expect("must succeed");
+        let res = encrypt_string("adgc").expect("must succeed");
         assert_eq!(res, "㡤㧣");
-        let decrypted = super::decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res).expect("must succeed");
         assert_eq!(decrypted, "adgc");
     }
 }
