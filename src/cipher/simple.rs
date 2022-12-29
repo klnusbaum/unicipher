@@ -103,15 +103,15 @@ impl<W: Write> Decrypter<W> {
     }
 }
 
-pub fn encrypt_to_string(data: &[u8]) -> Result<String> {
-    let mut result = Vec::with_capacity(encrypt_size(&data));
+pub fn encrypt_string(data: &str) -> Result<String> {
+    let mut result = Vec::with_capacity(encrypt_size(data.as_bytes()));
     let mut encrypter = Encrypter::from(&mut result);
     encrypter.encrypt(&mut Cursor::new(data))?;
     Ok(String::from_utf8(result)?)
 }
 
-pub fn decrypt_to_string(data: &[u8]) -> Result<String> {
-    let mut result = Vec::with_capacity(decrypt_size(&data));
+pub fn decrypt_string(data: &str) -> Result<String> {
+    let mut result = Vec::with_capacity(decrypt_size(data.as_bytes()));
     let mut decrypter = Decrypter::from(&mut result);
     decrypter.decrypt(&mut Cursor::new(data))?;
     Ok(String::from_utf8(result)?)
@@ -137,22 +137,22 @@ mod simple_tests {
 
     #[test]
     fn single_char_pair() {
-        let res = super::encrypt_to_string("ad".as_bytes()).expect("must succeed");
+        let res = super::encrypt_string("ad").expect("must succeed");
         assert_eq!(res, "㡤");
-        let decrypted = super::decrypt_to_string(res.as_bytes()).expect("must succeed");
+        let decrypted = super::decrypt_string(&res).expect("must succeed");
         assert_eq!(decrypted, "ad");
 
-        let res = super::encrypt_to_string("gc".as_bytes()).expect("must succeed");
+        let res = super::encrypt_string("gc").expect("must succeed");
         assert_eq!(res, "㧣");
-        let decrypted = super::decrypt_to_string(res.as_bytes()).expect("must succeed");
+        let decrypted = super::decrypt_string(&res).expect("must succeed");
         assert_eq!(decrypted, "gc");
     }
 
     #[test]
     fn even_length_string() {
-        let res = super::encrypt_to_string("adgc".as_bytes()).expect("must succeed");
+        let res = super::encrypt_string("adgc").expect("must succeed");
         assert_eq!(res, "㡤㧣");
-        let decrypted = super::decrypt_to_string(res.as_bytes()).expect("must succeed");
+        let decrypted = super::decrypt_string(&res).expect("must succeed");
         assert_eq!(decrypted, "adgc");
     }
 }

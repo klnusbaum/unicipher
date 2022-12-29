@@ -4,9 +4,9 @@ use anyhow::Result;
 use cipher::simple;
 
 fn main() -> Result<()> {
-    let encrypted = simple::encrypt_to_string("adgc".as_bytes())?;
+    let encrypted = simple::encrypt_string("adgc")?;
     println!("Encrytped is: '{}'", encrypted);
-    let decrypted = simple::decrypt_to_string(encrypted.as_bytes())?;
+    let decrypted = simple::decrypt_string(&encrypted)?;
     println!("Decrypted is: '{}'", decrypted);
     Ok(())
 }
