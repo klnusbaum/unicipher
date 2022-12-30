@@ -10,26 +10,11 @@ pub struct Encrypter<W: Write> {
     out: W,
 }
 
-impl<W: Write> From<W> for Encrypter<W> {
-    fn from(out: W) -> Self {
+impl<W: Write> Encrypter<W> {
+    pub fn new(out: W) -> Self {
         Encrypter { out }
     }
-}
 
-impl<W: Write> Encrypt for Encrypter<W> {
-    fn encrypt(&mut self, data: impl Read) -> Result<()> {
-        let mut bytes = data.bytes();
-        loop {
-            match (bytes.next(), bytes.next()) {
-                (Some(c0), Some(c1)) => self.encrypt_ascii_char_pair(c0?, c1?)?,
-                (Some(c0), None) => self.encrypt_single_ascii_char(c0?)?,
-                _ => return Ok(()),
-            };
-        }
-    }
-}
-
-impl<W: Write> Encrypter<W> {
     fn encrypt_ascii_char_pair(&mut self, c0: u8, c1: u8) -> Result<()> {
         let encrypted_char = &mut [0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
@@ -53,29 +38,28 @@ impl<W: Write> Encrypter<W> {
     }
 }
 
-pub struct Decrypter<W: Write> {
-    out: W,
-}
-
-impl<W: Write> From<W> for Decrypter<W> {
-    fn from(out: W) -> Self {
-        Decrypter { out }
-    }
-}
-
-impl<W: Write> Decrypt for Decrypter<W> {
-    fn decrypt(&mut self, data: impl Read) -> Result<()> {
+impl<W: Write> Encrypt for Encrypter<W> {
+    fn encrypt(&mut self, data: impl Read) -> Result<()> {
         let mut bytes = data.bytes();
         loop {
-            match (bytes.next(), bytes.next(), bytes.next()) {
-                (Some(b0), Some(b1), Some(b2)) => self.decrypt_chars2(b0?, b1?, b2?)?,
+            match (bytes.next(), bytes.next()) {
+                (Some(c0), Some(c1)) => self.encrypt_ascii_char_pair(c0?, c1?)?,
+                (Some(c0), None) => self.encrypt_single_ascii_char(c0?)?,
                 _ => return Ok(()),
             };
         }
     }
 }
 
+pub struct Decrypter<W: Write> {
+    out: W,
+}
+
 impl<W: Write> Decrypter<W> {
+    pub fn new(out: W) -> Self {
+        Decrypter { out }
+    }
+
     fn decrypt_chars2(&mut self, b0: u8, b1: u8, b2: u8) -> Result<()> {
         if b0 & SINGLE_CHAR_MASK != 0 {
             self.decrypt_single_char2(b0, b1)
@@ -103,16 +87,28 @@ impl<W: Write> Decrypter<W> {
     }
 }
 
+impl<W: Write> Decrypt for Decrypter<W> {
+    fn decrypt(&mut self, data: impl Read) -> Result<()> {
+        let mut bytes = data.bytes();
+        loop {
+            match (bytes.next(), bytes.next(), bytes.next()) {
+                (Some(b0), Some(b1), Some(b2)) => self.decrypt_chars2(b0?, b1?, b2?)?,
+                _ => return Ok(()),
+            };
+        }
+    }
+}
+
 pub fn encrypt_string(data: &str) -> Result<String> {
     let mut result = Vec::with_capacity(encrypt_size(data.as_bytes()));
-    let mut encrypter = Encrypter::from(&mut result);
+    let mut encrypter = Encrypter::new(&mut result);
     encrypter.encrypt(&mut Cursor::new(data))?;
     Ok(String::from_utf8(result)?)
 }
 
 pub fn decrypt_string(data: &str) -> Result<String> {
     let mut result = Vec::with_capacity(decrypt_size(data.as_bytes()));
-    let mut decrypter = Decrypter::from(&mut result);
+    let mut decrypter = Decrypter::new(&mut result);
     decrypter.decrypt(&mut Cursor::new(data))?;
     Ok(String::from_utf8(result)?)
 }
