@@ -4,9 +4,9 @@ use std::io::{Read, Write};
 pub mod simple;
 
 pub trait Encrypt {
-    fn encrypt(&self, data: impl Read, out: &mut impl Write) -> Result<()>;
+    fn encrypt<R: Read, W: Write>(&self, data: R, out: &mut W) -> Result<()>;
 }
 
 pub trait Decrypt {
-    fn decrypt(&self, data: impl Read, out: &mut impl Write) -> Result<()>;
+    fn decrypt<R: Read, W: Write>(&self, data: R, out: &mut W) -> Result<()>;
 }

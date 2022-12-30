@@ -15,7 +15,7 @@ impl Cipher {
 }
 
 impl super::Encrypt for Cipher {
-    fn encrypt(&self, data: impl Read, out: &mut impl Write) -> Result<()> {
+    fn encrypt<R: Read, W: Write>(&self, data: R, out: &mut W) -> Result<()> {
         let mut bytes = data.bytes();
         loop {
             match (bytes.next(), bytes.next()) {
@@ -28,7 +28,7 @@ impl super::Encrypt for Cipher {
 }
 
 impl super::Decrypt for Cipher {
-    fn decrypt(&self, data: impl Read, out: &mut impl Write) -> Result<()> {
+    fn decrypt<R: Read, W: Write>(&self, data: R, out: &mut W) -> Result<()> {
         let mut bytes = data.bytes();
         loop {
             match (bytes.next(), bytes.next(), bytes.next()) {
@@ -39,7 +39,7 @@ impl super::Decrypt for Cipher {
     }
 }
 
-fn encrypt_ascii_char_pair(out: &mut impl Write, c0: u8, c1: u8) -> Result<()> {
+fn encrypt_ascii_char_pair<W: Write>(out: &mut W, c0: u8, c1: u8) -> Result<()> {
     let encrypted_char = &mut [0, 0, 0];
     let sig_0 = c0 & SIG_BIT_MASK;
     let sig_1 = c1 & SIG_BIT_MASK;
@@ -51,7 +51,7 @@ fn encrypt_ascii_char_pair(out: &mut impl Write, c0: u8, c1: u8) -> Result<()> {
     Ok(out.write_all(encrypted_char)?)
 }
 
-fn encrypt_single_ascii_char(out: &mut impl Write, c0: u8) -> Result<()> {
+fn encrypt_single_ascii_char<W: Write>(out: &mut W, c0: u8) -> Result<()> {
     let encrypted_char = &mut [0, 0, 0];
     let sig_0 = c0 & SIG_BIT_MASK;
     let low_0 = c0 & LOWER_BITS_MASK;
@@ -61,7 +61,7 @@ fn encrypt_single_ascii_char(out: &mut impl Write, c0: u8) -> Result<()> {
     Ok(out.write_all(encrypted_char)?)
 }
 
-fn decrypt_chars(out: &mut impl Write, b0: u8, b1: u8, b2: u8) -> Result<()> {
+fn decrypt_chars<W: Write>(out: &mut W, b0: u8, b1: u8, b2: u8) -> Result<()> {
     if b0 & SINGLE_CHAR_MASK != 0 {
         decrypt_single_char(out, b0, b1)
     } else {
@@ -69,14 +69,14 @@ fn decrypt_chars(out: &mut impl Write, b0: u8, b1: u8, b2: u8) -> Result<()> {
     }
 }
 
-fn decrypt_single_char(out: &mut impl Write, b0: u8, b1: u8) -> Result<()> {
+fn decrypt_single_char<W: Write>(out: &mut W, b0: u8, b1: u8) -> Result<()> {
     let sig_bit = (b0 & 1) << 6;
     let lower = b1 & LOWER_BITS_MASK;
     let ascii_char = [sig_bit | lower];
     Ok(out.write_all(&ascii_char)?)
 }
 
-fn decrypt_char_pair(out: &mut impl Write, b0: u8, b1: u8, b2: u8) -> Result<()> {
+fn decrypt_char_pair<W: Write>(out: &mut W, b0: u8, b1: u8, b2: u8) -> Result<()> {
     let c0_sig_bit = (b0 & 2) << 5;
     let c1_sig_bit = (b0 & 1) << 6;
     let c0_lower = b1 & LOWER_BITS_MASK;
