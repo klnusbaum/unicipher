@@ -60,22 +60,22 @@ impl<W: Write> Decrypter<W> {
         Decrypter { out }
     }
 
-    fn decrypt_chars2(&mut self, b0: u8, b1: u8, b2: u8) -> Result<()> {
+    fn decrypt_chars(&mut self, b0: u8, b1: u8, b2: u8) -> Result<()> {
         if b0 & SINGLE_CHAR_MASK != 0 {
-            self.decrypt_single_char2(b0, b1)
+            self.decrypt_single_char(b0, b1)
         } else {
-            self.decrypt_char_pair2(b0, b1, b2)
+            self.decrypt_char_pair(b0, b1, b2)
         }
     }
 
-    fn decrypt_single_char2(&mut self, b0: u8, b1: u8) -> Result<()> {
+    fn decrypt_single_char(&mut self, b0: u8, b1: u8) -> Result<()> {
         let sig_bit = (b0 & 1) << 6;
         let lower = b1 & LOWER_BITS_MASK;
         let ascii_char = [sig_bit | lower];
         Ok(self.out.write_all(&ascii_char)?)
     }
 
-    fn decrypt_char_pair2(&mut self, b0: u8, b1: u8, b2: u8) -> Result<()> {
+    fn decrypt_char_pair(&mut self, b0: u8, b1: u8, b2: u8) -> Result<()> {
         let c0_sig_bit = (b0 & 2) << 5;
         let c1_sig_bit = (b0 & 1) << 6;
         let c0_lower = b1 & LOWER_BITS_MASK;
@@ -92,7 +92,7 @@ impl<W: Write> Decrypt for Decrypter<W> {
         let mut bytes = data.bytes();
         loop {
             match (bytes.next(), bytes.next(), bytes.next()) {
-                (Some(b0), Some(b1), Some(b2)) => self.decrypt_chars2(b0?, b1?, b2?)?,
+                (Some(b0), Some(b1), Some(b2)) => self.decrypt_chars(b0?, b1?, b2?)?,
                 _ => return Ok(()),
             };
         }
