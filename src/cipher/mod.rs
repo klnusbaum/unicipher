@@ -1,12 +1,12 @@
 use anyhow::Result;
-use std::io::Read;
+use std::io::{Read, Write};
 
 pub mod simple;
 
 pub trait Encrypt {
-    fn encrypt(&mut self, data: impl Read) -> Result<()>;
+    fn encrypt(&self, data: impl Read, out: &mut impl Write) -> Result<()>;
 }
 
 pub trait Decrypt {
-    fn decrypt(&mut self, data: impl Read) -> Result<()>;
+    fn decrypt(&self, data: impl Read, out: &mut impl Write) -> Result<()>;
 }
