@@ -76,7 +76,7 @@ impl Cli {
             self.with_reader_and_writer(cipher, reader, &mut file)
         } else {
             self.with_reader_and_writer(cipher, reader, &mut stdout())?;
-            Ok(stdout().write_all("\n".as_bytes())?)
+            finish_stdout()
         }
     }
 
@@ -95,4 +95,8 @@ impl Cli {
         }?;
         Ok(writer.flush()?)
     }
+}
+
+fn finish_stdout() -> Result<()> {
+    Ok(stdout().write_all("\n".as_bytes())?)
 }
