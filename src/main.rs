@@ -112,7 +112,7 @@ impl Finish for File {}
 
 impl Finish for Stdout {
     fn finish(mut self) -> Result<()> {
-        self.write("\n".as_bytes())?;
+        self.write_all("\n".as_bytes())?;
         Ok(self.flush()?)
     }
 }
