@@ -120,14 +120,14 @@ impl Finish for Stdout {
 impl CipherType {
     fn encrypt<R: Read, W: Write>(&self, reader: R, writer: &mut W) -> Result<()> {
         match self {
-            CipherType::Simple => simple::Cipher::new().encrypt(reader, writer),
+            CipherType::Simple => simple::Encrypter::new(writer).encrypt(reader),
             CipherType::Hieroglyphs => Ok(()),
         }
     }
 
     fn decrypt<R: Read, W: Write>(&self, reader: R, writer: &mut W) -> Result<()> {
         match self {
-            CipherType::Simple => simple::Cipher::new().decrypt(reader, writer),
+            CipherType::Simple => simple::Decrypter::new(writer).decrypt(reader),
             CipherType::Hieroglyphs => Ok(()),
         }
     }
