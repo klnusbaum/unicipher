@@ -1,6 +1,7 @@
 use anyhow::Result;
 use std::io::Read;
 
+pub mod hieroglphys;
 pub mod simple;
 
 pub trait Encrypt {
