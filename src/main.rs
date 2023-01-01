@@ -1,7 +1,7 @@
 mod cipher;
 
 use anyhow::Result;
-use cipher::{standard, Decrypt, Encrypt};
+use cipher::{extended, standard, Decrypt, Encrypt};
 use clap::{ArgGroup, Parser};
 use std::fs::{File, OpenOptions};
 use std::io::{stdin, stdout, BufReader, BufWriter, Cursor, Read, Stdin, Stdout, Write};
@@ -121,14 +121,14 @@ impl CipherType {
     fn encrypt<R: Read, W: Write>(&self, reader: R, writer: &mut W) -> Result<()> {
         match self {
             CipherType::Standard => standard::Encrypter::new(writer).encrypt(reader),
-            CipherType::Extended => Ok(()),
+            CipherType::Extended => extended::Encrypter::new(writer).encrypt(reader),
         }
     }
 
     fn decrypt<R: Read, W: Write>(&self, reader: R, writer: &mut W) -> Result<()> {
         match self {
             CipherType::Standard => standard::Decrypter::new(writer).decrypt(reader),
-            CipherType::Extended => Ok(()),
+            CipherType::Extended => extended::Decrypter::new(writer).decrypt(reader),
         }
     }
 }
