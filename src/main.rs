@@ -67,21 +67,12 @@ impl Cli {
         R: Read,
         W: Write + Finish,
     {
-        {
-            let buf_reader = BufReader::new(reader);
-            let mut buf_writer = BufWriter::new(&mut writer);
-            match self.cipher {
-                CipherType::Standard => {
-                    self.cipher(buf_reader, &mut buf_writer, Cipher::new(Standard {}))?
-                }
-                CipherType::Extended => {
-                    self.cipher(buf_reader, &mut buf_writer, Cipher::new(Extended {}))?
-                }
-            }
-
-            buf_writer.flush()?;
+        match self.cipher {
+            CipherType::Standard => self.cipher(reader, &mut writer, Cipher::new(Standard {}))?,
+            CipherType::Extended => self.cipher(reader, &mut writer, Cipher::new(Extended {}))?,
         }
 
+        writer.flush()?;
         writer.finish()
     }
 
@@ -104,24 +95,25 @@ impl Cli {
     }
 }
 
-fn from_stdin() -> Stdin {
-    stdin()
+fn from_stdin() -> BufReader<Stdin> {
+    BufReader::new(stdin())
 }
 
-fn from_file(path: &Path) -> Result<File> {
-    Ok(File::open(path)?)
+fn from_file(path: &Path) -> Result<BufReader<File>> {
+    Ok(BufReader::new(File::open(path)?))
 }
 
 fn from_input(input: &str) -> Cursor<&str> {
     Cursor::new(input)
 }
 
-fn to_stdout() -> Stdout {
-    stdout()
+fn to_stdout() -> BufWriter<Stdout> {
+    BufWriter::new(stdout())
 }
 
-fn to_file(path: &Path) -> Result<File> {
-    Ok(OpenOptions::new().write(true).open(path)?)
+fn to_file(path: &Path) -> Result<BufWriter<File>> {
+    let file = OpenOptions::new().write(true).open(path)?;
+    Ok(BufWriter::new(file))
 }
 
 trait Finish: Sized {
@@ -130,9 +122,9 @@ trait Finish: Sized {
     }
 }
 
-impl Finish for File {}
+impl Finish for BufWriter<File> {}
 
-impl Finish for Stdout {
+impl Finish for BufWriter<Stdout> {
     fn finish(mut self) -> Result<()> {
         self.write_all("\n".as_bytes())?;
         Ok(self.flush()?)
