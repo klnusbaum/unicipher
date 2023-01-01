@@ -115,13 +115,13 @@ pub fn decrypt_string(data: &str) -> Result<String> {
 }
 
 fn encrypt_size(data: &[u8]) -> usize {
-    let num_chars_needed = if data.len() % 2 == 0 {
+    let num_encrypted_chars_needed = if data.len() % 2 == 0 {
         data.len() / 2
     } else {
         (data.len() / 2) + 1
     };
 
-    return num_chars_needed * 3;
+    return num_encrypted_chars_needed * 3;
 }
 
 fn decrypt_size(data: &[u8]) -> usize {
