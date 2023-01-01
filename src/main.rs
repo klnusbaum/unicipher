@@ -1,7 +1,7 @@
 mod cipher;
 
 use anyhow::Result;
-use cipher::{extended, standard, Decrypt, Encrypt};
+use cipher::{Algorithm, Cipher, Extended, Standard};
 use clap::{ArgGroup, Parser};
 use std::fs::{File, OpenOptions};
 use std::io::{stdin, stdout, BufReader, BufWriter, Cursor, Read, Stdin, Stdout, Write};
@@ -70,15 +70,37 @@ impl Cli {
         {
             let buf_reader = BufReader::new(reader);
             let mut buf_writer = BufWriter::new(&mut writer);
-            if self.encrypt {
-                self.cipher.encrypt(buf_reader, &mut buf_writer)
-            } else {
-                self.cipher.decrypt(buf_reader, &mut buf_writer)
-            }?;
+            match self.cipher {
+                CipherType::Standard => {
+                    self.cipher(buf_reader, &mut buf_writer, Cipher::new(Standard {}))?
+                }
+                CipherType::Extended => {
+                    self.cipher(buf_reader, &mut buf_writer, Cipher::new(Extended {}))?
+                }
+            }
+
             buf_writer.flush()?;
         }
 
         writer.finish()
+    }
+
+    fn cipher<R, W, A, const N: usize>(
+        &self,
+        reader: R,
+        mut writer: W,
+        cipher: Cipher<A, N>,
+    ) -> Result<()>
+    where
+        R: Read,
+        W: Write,
+        A: Algorithm<N>,
+    {
+        if self.encrypt {
+            cipher.encrypt(reader, &mut writer)
+        } else {
+            cipher.decrypt(reader, &mut writer)
+        }
     }
 }
 
@@ -114,21 +136,5 @@ impl Finish for Stdout {
     fn finish(mut self) -> Result<()> {
         self.write_all("\n".as_bytes())?;
         Ok(self.flush()?)
-    }
-}
-
-impl CipherType {
-    fn encrypt<R: Read, W: Write>(&self, reader: R, writer: &mut W) -> Result<()> {
-        match self {
-            CipherType::Standard => standard::Encrypter::new(writer).encrypt(reader),
-            CipherType::Extended => extended::Encrypter::new(writer).encrypt(reader),
-        }
-    }
-
-    fn decrypt<R: Read, W: Write>(&self, reader: R, writer: &mut W) -> Result<()> {
-        match self {
-            CipherType::Standard => standard::Decrypter::new(writer).decrypt(reader),
-            CipherType::Extended => extended::Decrypter::new(writer).decrypt(reader),
-        }
     }
 }
