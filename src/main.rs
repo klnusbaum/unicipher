@@ -1,7 +1,7 @@
 mod cipher;
 
 use anyhow::Result;
-use cipher::{simple, Decrypt, Encrypt};
+use cipher::{standard, Decrypt, Encrypt};
 use clap::{ArgGroup, Parser};
 use std::fs::{File, OpenOptions};
 use std::io::{stdin, stdout, BufReader, BufWriter, Cursor, Read, Stdin, Stdout, Write};
@@ -22,7 +22,7 @@ struct Cli {
     #[arg(short, long)]
     encrypt: bool,
 
-    #[arg(value_enum, short, long, default_value_t = CipherType::Simple)]
+    #[arg(value_enum, short, long, default_value_t = CipherType::Standard)]
     cipher: CipherType,
 
     #[arg(short = 'f', long)]
@@ -36,8 +36,8 @@ struct Cli {
 
 #[derive(clap::ValueEnum, Clone)]
 enum CipherType {
-    Simple,
-    Hieroglyphs,
+    Standard,
+    Extended,
 }
 
 fn main() -> Result<()> {
@@ -120,15 +120,15 @@ impl Finish for Stdout {
 impl CipherType {
     fn encrypt<R: Read, W: Write>(&self, reader: R, writer: &mut W) -> Result<()> {
         match self {
-            CipherType::Simple => simple::Encrypter::new(writer).encrypt(reader),
-            CipherType::Hieroglyphs => Ok(()),
+            CipherType::Standard => standard::Encrypter::new(writer).encrypt(reader),
+            CipherType::Extended => Ok(()),
         }
     }
 
     fn decrypt<R: Read, W: Write>(&self, reader: R, writer: &mut W) -> Result<()> {
         match self {
-            CipherType::Simple => simple::Decrypter::new(writer).decrypt(reader),
-            CipherType::Hieroglyphs => Ok(()),
+            CipherType::Standard => standard::Decrypter::new(writer).decrypt(reader),
+            CipherType::Extended => Ok(()),
         }
     }
 }

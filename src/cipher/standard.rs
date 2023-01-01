@@ -129,7 +129,7 @@ fn decrypt_size(data: &[u8]) -> usize {
 }
 
 #[cfg(test)]
-mod simple_tests {
+mod standard_tests {
     use super::{decrypt_string, encrypt_string};
 
     #[test]

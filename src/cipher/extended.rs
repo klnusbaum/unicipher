@@ -134,7 +134,7 @@ fn decrypt_size(data: &[u8]) -> usize {
 }
 
 #[cfg(test)]
-mod hieroglyphs_tests {
+mod extended_tests {
     use super::{decrypt_string, encrypt_string};
 
     #[test]
