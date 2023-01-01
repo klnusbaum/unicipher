@@ -120,7 +120,6 @@ fn encrypt_size(data: &[u8]) -> usize {
     } else {
         (data.len() / 2) + 1
     };
-
     return num_encrypted_chars_needed * 3;
 }
 

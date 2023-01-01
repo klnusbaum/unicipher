@@ -25,7 +25,6 @@ impl<W: Write> Encrypter<W> {
         encrypted_char[1] = 144 | (sig_0 >> 5) | (sig_1 >> 6);
         encrypted_char[2] = 128 | low_0;
         encrypted_char[3] = 128 | low_1;
-
         Ok(self.writer.write_all(encrypted_char)?)
     }
 
@@ -126,7 +125,6 @@ fn encrypt_size(data: &[u8]) -> usize {
     } else {
         (data.len() / 2) + 1
     };
-
     return num_encrypted_chars_needed * 4;
 }
 
