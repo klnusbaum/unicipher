@@ -126,7 +126,7 @@ fn encrypt_size(data: &[u8]) -> usize {
 
 fn decrypt_size(data: &[u8]) -> usize {
     let num_encrypted_chars = data.len() / 3;
-    return num_encrypted_chars / 2;
+    return num_encrypted_chars * 2;
 }
 
 #[cfg(test)]
