@@ -99,18 +99,18 @@ impl<W: Write> super::Decrypt for Decrypter<W> {
 }
 
 pub fn encrypt_string(data: &str) -> Result<String> {
-    let mut input = Cursor::new(data);
+    let input = Cursor::new(data);
     let mut result = Vec::with_capacity(encrypt_size(data.as_bytes()));
     let mut encrypter = Encrypter::new(&mut result);
-    encrypter.encrypt(&mut input)?;
+    encrypter.encrypt(input)?;
     Ok(String::from_utf8(result)?)
 }
 
 pub fn decrypt_string(data: &str) -> Result<String> {
-    let mut input = Cursor::new(data);
+    let input = Cursor::new(data);
     let mut result = Vec::with_capacity(decrypt_size(data.as_bytes()));
     let mut decrypter = Decrypter::new(&mut result);
-    decrypter.decrypt(&mut input)?;
+    decrypter.decrypt(input)?;
     Ok(String::from_utf8(result)?)
 }
 
