@@ -5,14 +5,6 @@ const SIG_BIT_MASK: u8 = 127;
 const LOWER_BITS_MASK: u8 = 63;
 const SINGLE_CHAR_MASK: u8 = 4;
 
-pub trait Encrypt {
-    fn encrypt<R: Read>(&mut self, data: R) -> Result<()>;
-}
-
-pub trait Decrypt {
-    fn decrypt<R: Read>(&mut self, data: R) -> Result<()>;
-}
-
 pub trait Algorithm<const N: usize> {
     fn encrypt_chars(&self, c0: u8, c1: Option<u8>) -> [u8; N];
     fn decrypt_chars(&self, encrypted: [u8; N]) -> (u8, Option<u8>);
