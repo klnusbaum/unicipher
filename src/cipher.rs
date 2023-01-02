@@ -40,36 +40,13 @@ impl<A: Algorithm<N>, const N: usize> Cipher<A, N> {
         R: Read,
         W: Write,
     {
-        let mut bytes = from.bytes();
-        loop {
-            let encrypted = match Self::read_n_bytes(&mut bytes)? {
-                Some(e) => e,
-                None => return Ok(()),
-            };
-            match self.algorithm.decrypt_chars(encrypted) {
+        for encrypted in NBytes::new(from.bytes()) {
+            match self.algorithm.decrypt_chars(encrypted?) {
                 (c0, Some(c1)) => to.write_all(&[c0, c1])?,
                 (c0, None) => to.write_all(&[c0])?,
             }
         }
-    }
-
-    fn read_n_bytes<R: Read>(from: &mut Bytes<R>) -> Result<Option<[u8; N]>> {
-        let mut encrypted = [0; N];
-        for i in 0..N {
-            match from.next() {
-                Some(byte) => encrypted[i] = byte?,
-                None if i == 0 => return Ok(None),
-                None => return Self::insufficent_bytes(i),
-            }
-        }
-        Ok(Some(encrypted))
-    }
-
-    fn insufficent_bytes(num_bytes: usize) -> Result<Option<[u8; N]>> {
-        Err(Error::msg(format!(
-            "expected utf-8 character of {} bytes but found character with only {} byte(s)",
-            N, num_bytes
-        )))
+        Ok(())
     }
 
     pub fn encrypt_string(&self, to_encrypt: &str) -> Result<String> {
@@ -100,6 +77,40 @@ impl<A: Algorithm<N>, const N: usize> Cipher<A, N> {
     const fn decrypt_size(num_bytes: usize) -> usize {
         let num_encrypted_chars = num_bytes / N;
         return num_encrypted_chars * 2;
+    }
+}
+
+struct NBytes<R: Read, const N: usize> {
+    inner: Bytes<R>,
+}
+
+impl<R: Read, const N: usize> NBytes<R, N> {
+    fn new(inner: Bytes<R>) -> NBytes<R, N> {
+        NBytes { inner }
+    }
+
+    fn insufficent_bytes(num_bytes: usize) -> Result<[u8; N]> {
+        Err(Error::msg(format!(
+            "expected utf-8 character of {} bytes but found character with only {} byte(s)",
+            N, num_bytes
+        )))
+    }
+}
+
+impl<R: Read, const N: usize> Iterator for NBytes<R, N> {
+    type Item = Result<[u8; N]>;
+
+    fn next(&mut self) -> Option<Result<[u8; N]>> {
+        let mut encrypted = [0; N];
+        for i in 0..N {
+            match self.inner.next() {
+                Some(Ok(byte)) => encrypted[i] = byte,
+                None if i == 0 => return None,
+                Some(Err(e)) => return Some(Err(Error::new(e))),
+                None => return Some(Self::insufficent_bytes(i)),
+            }
+        }
+        Some(Ok(encrypted))
     }
 }
 
