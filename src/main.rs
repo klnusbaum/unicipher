@@ -1,8 +1,10 @@
 mod cipher;
+mod encrypt;
 
 use anyhow::Result;
 use cipher::{Algorithm, Cipher, Extended, Standard};
 use clap::{ArgGroup, Parser};
+use encrypt::Encrypter;
 use std::fs::{File, OpenOptions};
 use std::io::{stdin, stdout, BufReader, BufWriter, Cursor, Read, Stdin, Stdout, Write};
 use std::path::{Path, PathBuf};
@@ -82,10 +84,10 @@ impl Cli {
         W: Write,
         A: Algorithm<N>,
     {
-        let cipher = Cipher::new(alrogithm);
         if self.encrypt {
-            cipher.encrypt(reader, &mut writer)
+            Encrypter::new(writer, alrogithm).encrypt(reader)
         } else {
+            let cipher = Cipher::new(alrogithm);
             cipher.decrypt(reader, &mut writer)
         }
     }
