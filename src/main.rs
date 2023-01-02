@@ -3,7 +3,7 @@ mod decrypt;
 mod encrypt;
 
 use anyhow::Result;
-use cipher::{Algorithm, Extended, Standard};
+use cipher::{Cipher, Extended, Standard};
 use clap::{ArgGroup, Parser};
 use decrypt::Decrypter;
 use encrypt::Encrypter;
@@ -80,16 +80,16 @@ impl Cli {
         writer.finish()
     }
 
-    fn cipher<R, W, A, const N: usize>(&self, reader: R, writer: W, alrogithm: A) -> Result<()>
+    fn cipher<R, W, C, const N: usize>(&self, reader: R, writer: W, cipher: C) -> Result<()>
     where
         R: Read,
         W: Write,
-        A: Algorithm<N>,
+        C: Cipher<N>,
     {
         if self.encrypt {
-            Encrypter::new(writer, alrogithm).encrypt(reader)
+            Encrypter::new(writer, cipher).encrypt(reader)
         } else {
-            Decrypter::new(writer, alrogithm).decrypt(reader)
+            Decrypter::new(writer, cipher).decrypt(reader)
         }
     }
 }

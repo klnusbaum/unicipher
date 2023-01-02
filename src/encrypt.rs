@@ -1,15 +1,15 @@
-use crate::cipher::Algorithm;
+use crate::cipher::Cipher;
 use anyhow::Result;
 use std::io::{Cursor, Read, Write};
 
-pub struct Encrypter<W, A, const N: usize> {
+pub struct Encrypter<W, C, const N: usize> {
     to: W,
-    algorithm: A,
+    cipher: C,
 }
 
-impl<W: Write, A: Algorithm<N>, const N: usize> Encrypter<W, A, N> {
-    pub fn new(to: W, algorithm: A) -> Self {
-        Encrypter { to, algorithm }
+impl<W: Write, C: Cipher<N>, const N: usize> Encrypter<W, C, N> {
+    pub fn new(to: W, cipher: C) -> Self {
+        Encrypter { to, cipher }
     }
 
     pub fn encrypt<R>(&mut self, from: R) -> Result<()>
@@ -19,8 +19,8 @@ impl<W: Write, A: Algorithm<N>, const N: usize> Encrypter<W, A, N> {
         let mut bytes = from.bytes();
         loop {
             let encrypted = match (bytes.next(), bytes.next()) {
-                (Some(c0), Some(c1)) => self.algorithm.encrypt_char_pair(c0?, c1?),
-                (Some(c0), None) => self.algorithm.encrypt_single_char(c0?),
+                (Some(c0), Some(c1)) => self.cipher.encrypt_char_pair(c0?, c1?),
+                (Some(c0), None) => self.cipher.encrypt_single_char(c0?),
                 _ => return Ok(()),
             };
             self.to.write_all(&encrypted)?;
@@ -28,14 +28,14 @@ impl<W: Write, A: Algorithm<N>, const N: usize> Encrypter<W, A, N> {
     }
 }
 
-pub fn encrypt_string<A, const N: usize>(to_encrypt: &str, algorithm: A) -> Result<String>
+pub fn encrypt_string<C, const N: usize>(to_encrypt: &str, cipher: C) -> Result<String>
 where
-    A: Algorithm<N>,
+    C: Cipher<N>,
 {
     let input = Cursor::new(to_encrypt);
     let buf_size = encrypt_size::<N>(to_encrypt.as_bytes().len());
     let mut result = Vec::with_capacity(buf_size);
-    Encrypter::new(&mut result, algorithm).encrypt(input)?;
+    Encrypter::new(&mut result, cipher).encrypt(input)?;
     Ok(String::from_utf8(result)?)
 }
 

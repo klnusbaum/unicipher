@@ -1,15 +1,15 @@
-use crate::cipher::Algorithm;
+use crate::cipher::Cipher;
 use anyhow::{Error, Result};
 use std::io::{Bytes, Cursor, Read, Write};
 
-pub struct Decrypter<W, A, const N: usize> {
+pub struct Decrypter<W, C, const N: usize> {
     to: W,
-    algorithm: A,
+    cipher: C,
 }
 
-impl<W: Write, A: Algorithm<N>, const N: usize> Decrypter<W, A, N> {
-    pub fn new(to: W, algorithm: A) -> Self {
-        Decrypter { to, algorithm }
+impl<W: Write, C: Cipher<N>, const N: usize> Decrypter<W, C, N> {
+    pub fn new(to: W, cipher: C) -> Self {
+        Decrypter { to, cipher }
     }
 
     pub fn decrypt<R>(&mut self, from: R) -> Result<()>
@@ -18,12 +18,11 @@ impl<W: Write, A: Algorithm<N>, const N: usize> Decrypter<W, A, N> {
     {
         for encrypted in NBytes::new(from.bytes()) {
             let encrypted = encrypted?;
-            if self.algorithm.has_single_char(encrypted) {
+            if self.cipher.has_single_char(encrypted) {
                 self.to
-                    .write_all(&self.algorithm.decrypt_single_char(encrypted))
+                    .write_all(&self.cipher.decrypt_single_char(encrypted))
             } else {
-                self.to
-                    .write_all(&self.algorithm.decrypt_char_pair(encrypted))
+                self.to.write_all(&self.cipher.decrypt_char_pair(encrypted))
             }?;
         }
         Ok(())
@@ -64,14 +63,14 @@ impl<R: Read, const N: usize> Iterator for NBytes<R, N> {
     }
 }
 
-pub fn decrypt_string<A, const N: usize>(to_decrypt: &str, algorithm: A) -> Result<String>
+pub fn decrypt_string<C, const N: usize>(to_decrypt: &str, cipher: C) -> Result<String>
 where
-    A: Algorithm<N>,
+    C: Cipher<N>,
 {
     let input = Cursor::new(to_decrypt);
     let buf_size = decrypt_size::<N>(to_decrypt.as_bytes().len());
     let mut result = Vec::with_capacity(buf_size);
-    Decrypter::new(&mut result, algorithm).decrypt(input)?;
+    Decrypter::new(&mut result, cipher).decrypt(input)?;
     Ok(String::from_utf8(result)?)
 }
 

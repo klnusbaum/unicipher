@@ -2,7 +2,7 @@ const SIG_BIT_MASK: u8 = 127;
 const LOWER_BITS_MASK: u8 = 63;
 const SINGLE_CHAR_MASK: u8 = 4;
 
-pub trait Algorithm<const N: usize> {
+pub trait Cipher<const N: usize> {
     fn encrypt_char_pair(&self, c0: u8, c1: u8) -> [u8; N];
     fn encrypt_single_char(&self, c0: u8) -> [u8; N];
     fn decrypt_single_char(&self, encrypted: [u8; N]) -> [u8; 1];
@@ -12,7 +12,7 @@ pub trait Algorithm<const N: usize> {
 
 pub struct Standard {}
 
-impl Algorithm<3> for Standard {
+impl Cipher<3> for Standard {
     fn encrypt_char_pair(&self, c0: u8, c1: u8) -> [u8; 3] {
         let mut encrypted_char = [0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
@@ -58,7 +58,7 @@ impl Algorithm<3> for Standard {
 
 pub struct Extended {}
 
-impl Algorithm<4> for Extended {
+impl Cipher<4> for Extended {
     fn encrypt_char_pair(&self, c0: u8, c1: u8) -> [u8; 4] {
         let mut encrypted_char = [0, 0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
