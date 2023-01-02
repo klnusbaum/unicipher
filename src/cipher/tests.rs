@@ -6,10 +6,10 @@ fn encrypt_string<C, const N: usize>(to_encrypt: &str, cipher: C) -> Result<Stri
 where
     C: Cipher<N>,
 {
-    let input = Cursor::new(to_encrypt);
+    let reader = Cursor::new(to_encrypt);
     let buf_size = encrypt_size::<N>(to_encrypt.as_bytes().len());
     let mut result = Vec::with_capacity(buf_size);
-    Encrypter::new(&mut result, cipher).encrypt(input)?;
+    Encrypter::new(&mut result, cipher).encrypt(reader)?;
     Ok(String::from_utf8(result)?)
 }
 
@@ -26,10 +26,10 @@ fn decrypt_string<C, const N: usize>(to_decrypt: &str, cipher: C) -> Result<Stri
 where
     C: Cipher<N>,
 {
-    let input = Cursor::new(to_decrypt);
+    let reader = Cursor::new(to_decrypt);
     let buf_size = decrypt_size::<N>(to_decrypt.as_bytes().len());
     let mut result = Vec::with_capacity(buf_size);
-    Decrypter::new(&mut result, cipher).decrypt(input)?;
+    Decrypter::new(&mut result, cipher).decrypt(reader)?;
     Ok(String::from_utf8(result)?)
 }
 
