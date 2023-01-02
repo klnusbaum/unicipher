@@ -2,6 +2,12 @@ const SIG_BIT_MASK: u8 = 127;
 const LOWER_BITS_MASK: u8 = 63;
 const SINGLE_CHAR_MASK: u8 = 4;
 
+mod decrypt;
+mod encrypt;
+
+pub use decrypt::{decrypt_string, Decrypter};
+pub use encrypt::{encrypt_string, Encrypter};
+
 pub trait Cipher<const N: usize> {
     fn encrypt_char_pair(&self, c0: u8, c1: u8) -> [u8; N];
     fn encrypt_single_char(&self, c0: u8) -> [u8; N];
@@ -106,9 +112,7 @@ impl Cipher<4> for Extended {
 
 #[cfg(test)]
 mod standard_tests {
-    use super::Standard;
-    use crate::decrypt::decrypt_string;
-    use crate::encrypt::encrypt_string;
+    use super::{decrypt_string, encrypt_string, Standard};
 
     #[test]
     fn single_char_pair() {
@@ -145,9 +149,7 @@ mod standard_tests {
 
 #[cfg(test)]
 mod extended_tests {
-    use super::Extended;
-    use crate::decrypt::decrypt_string;
-    use crate::encrypt::encrypt_string;
+    use super::{decrypt_string, encrypt_string, Extended};
 
     #[test]
     fn single_char_pair() {

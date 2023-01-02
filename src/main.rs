@@ -1,12 +1,8 @@
 mod cipher;
-mod decrypt;
-mod encrypt;
 
 use anyhow::Result;
-use cipher::{Cipher, Extended, Standard};
+use cipher::{Cipher, Decrypter, Encrypter, Extended, Standard};
 use clap::{ArgGroup, Parser};
-use decrypt::Decrypter;
-use encrypt::Encrypter;
 use std::fs::{File, OpenOptions};
 use std::io::{stdin, stdout, BufReader, BufWriter, Cursor, Read, Stdin, Stdout, Write};
 use std::path::{Path, PathBuf};
