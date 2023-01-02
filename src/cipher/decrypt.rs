@@ -19,8 +19,7 @@ impl<W: Write, C: Cipher<N>, const N: usize> Decrypter<W, C, N> {
         for encrypted in NBytes::new(from.bytes()) {
             let encrypted = encrypted?;
             if self.cipher.has_single_char(encrypted) {
-                self.to
-                    .write_all(&self.cipher.decrypt_single_char(encrypted))
+                self.to.write_all(&self.cipher.decrypt_char(encrypted))
             } else {
                 self.to.write_all(&self.cipher.decrypt_char_pair(encrypted))
             }?;

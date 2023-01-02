@@ -20,7 +20,7 @@ impl<W: Write, C: Cipher<N>, const N: usize> Encrypter<W, C, N> {
         for byte_pair in BytePairs::new(from.bytes()) {
             let encrypted = match byte_pair {
                 (c0, Some(c1)) => self.cipher.encrypt_char_pair(c0?, c1?),
-                (c0, None) => self.cipher.encrypt_single_char(c0?),
+                (c0, None) => self.cipher.encrypt_char(c0?),
             };
             self.to.write_all(&encrypted)?;
         }

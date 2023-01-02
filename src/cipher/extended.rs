@@ -20,7 +20,7 @@ impl Cipher<4> for Extended {
         return encrypted_char;
     }
 
-    fn encrypt_single_char(&self, c0: u8) -> [u8; 4] {
+    fn encrypt_char(&self, c0: u8) -> [u8; 4] {
         let mut encrypted_char = [0, 0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
         let low_0 = c0 & LOWER_BITS_MASK;
@@ -41,7 +41,7 @@ impl Cipher<4> for Extended {
         return [c0, c1];
     }
 
-    fn decrypt_single_char(&self, encrypted: [u8; 4]) -> [u8; 1] {
+    fn decrypt_char(&self, encrypted: [u8; 4]) -> [u8; 1] {
         let sig_bit = (encrypted[1] & 1) << 6;
         let lower = encrypted[2] & LOWER_BITS_MASK;
         return [sig_bit | lower];
