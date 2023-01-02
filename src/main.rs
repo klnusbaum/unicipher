@@ -1,9 +1,11 @@
 mod cipher;
+mod decrypt;
 mod encrypt;
 
 use anyhow::Result;
-use cipher::{Algorithm, Cipher, Extended, Standard};
+use cipher::{Algorithm, Extended, Standard};
 use clap::{ArgGroup, Parser};
+use decrypt::Decrypter;
 use encrypt::Encrypter;
 use std::fs::{File, OpenOptions};
 use std::io::{stdin, stdout, BufReader, BufWriter, Cursor, Read, Stdin, Stdout, Write};
@@ -78,7 +80,7 @@ impl Cli {
         writer.finish()
     }
 
-    fn cipher<R, W, A, const N: usize>(&self, reader: R, mut writer: W, alrogithm: A) -> Result<()>
+    fn cipher<R, W, A, const N: usize>(&self, reader: R, writer: W, alrogithm: A) -> Result<()>
     where
         R: Read,
         W: Write,
@@ -87,8 +89,7 @@ impl Cli {
         if self.encrypt {
             Encrypter::new(writer, alrogithm).encrypt(reader)
         } else {
-            let cipher = Cipher::new(alrogithm);
-            cipher.decrypt(reader, &mut writer)
+            Decrypter::new(writer, alrogithm).decrypt(reader)
         }
     }
 }

@@ -1,6 +1,3 @@
-use anyhow::{Error, Result};
-use std::io::{Bytes, Cursor, Read, Write};
-
 const SIG_BIT_MASK: u8 = 127;
 const LOWER_BITS_MASK: u8 = 63;
 const SINGLE_CHAR_MASK: u8 = 4;
@@ -11,79 +8,6 @@ pub trait Algorithm<const N: usize> {
     fn decrypt_single_char(&self, encrypted: [u8; N]) -> [u8; 1];
     fn decrypt_char_pair(&self, encrypted: [u8; N]) -> [u8; 2];
     fn has_single_char(&self, encrypted: [u8; N]) -> bool;
-}
-
-pub struct Cipher<A: Algorithm<N>, const N: usize> {
-    algorithm: A,
-}
-
-impl<A: Algorithm<N>, const N: usize> Cipher<A, N> {
-    pub fn new(algorithm: A) -> Self {
-        Cipher { algorithm }
-    }
-
-    pub fn decrypt<R, W>(&self, from: R, mut to: W) -> Result<()>
-    where
-        R: Read,
-        W: Write,
-    {
-        for encrypted in NBytes::new(from.bytes()) {
-            let encrypted = encrypted?;
-            if self.algorithm.has_single_char(encrypted) {
-                to.write_all(&self.algorithm.decrypt_single_char(encrypted))
-            } else {
-                to.write_all(&self.algorithm.decrypt_char_pair(encrypted))
-            }?;
-        }
-        Ok(())
-    }
-
-    pub fn decrypt_string(&self, to_decrypt: &str) -> Result<String> {
-        let input = Cursor::new(to_decrypt);
-        let buf_size = Self::decrypt_size(to_decrypt.as_bytes().len());
-        let mut result = Vec::with_capacity(buf_size);
-        self.decrypt(input, &mut result)?;
-        Ok(String::from_utf8(result)?)
-    }
-
-    const fn decrypt_size(num_bytes: usize) -> usize {
-        let num_encrypted_chars = num_bytes / N;
-        return num_encrypted_chars * 2;
-    }
-}
-
-struct NBytes<R: Read, const N: usize> {
-    inner: Bytes<R>,
-}
-
-impl<R: Read, const N: usize> NBytes<R, N> {
-    fn new(inner: Bytes<R>) -> NBytes<R, N> {
-        NBytes { inner }
-    }
-
-    fn insufficent_bytes(num_bytes: usize) -> Result<[u8; N]> {
-        Err(Error::msg(format!(
-            "expected utf-8 character of {} bytes but found character with only {} byte(s)",
-            N, num_bytes
-        )))
-    }
-}
-
-impl<R: Read, const N: usize> Iterator for NBytes<R, N> {
-    type Item = Result<[u8; N]>;
-
-    fn next(&mut self) -> Option<Result<[u8; N]>> {
-        let mut encrypted = [0; N];
-        for i in 0..N {
-            match self.inner.next() {
-                Some(Ok(byte)) => encrypted[i] = byte,
-                None if i == 0 => return None,
-                Some(Err(e)) => return Some(Err(Error::new(e))),
-                None => return Some(Self::insufficent_bytes(i)),
-            }
-        }
-        Some(Ok(encrypted))
-    }
 }
 
 pub struct Standard {}
@@ -182,49 +106,47 @@ impl Algorithm<4> for Extended {
 
 #[cfg(test)]
 mod standard_tests {
-    use super::{Cipher, Standard};
+    use super::Standard;
+    use crate::decrypt::decrypt_string;
     use crate::encrypt::encrypt_string;
 
     #[test]
     fn single_char_pair() {
-        let cipher = Cipher::new(Standard {});
         let res = encrypt_string("ad", Standard {}).expect("must succeed");
         assert_eq!(res, "㡤");
-        let decrypted = cipher.decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res, Standard {}).expect("must succeed");
         assert_eq!(decrypted, "ad");
     }
 
     #[test]
     fn even_length_string() {
-        let cipher = Cipher::new(Standard {});
         let res = encrypt_string("adgc", Standard {}).expect("must succeed");
         assert_eq!(&res, "㡤㧣");
-        let decrypted = cipher.decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res, Standard {}).expect("must succeed");
         assert_eq!(decrypted, "adgc");
     }
 
     #[test]
     fn odd_length_string() {
-        let cipher = Cipher::new(Standard {});
         let res = encrypt_string("bbb", Standard {}).expect("must succeed");
         assert_eq!(&res, "㢢墀");
-        let decrypted = cipher.decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res, Standard {}).expect("must succeed");
         assert_eq!(decrypted, "bbb");
     }
 
     #[test]
     fn single_char_string() {
-        let cipher = Cipher::new(Standard {});
         let res = encrypt_string("x", Standard {}).expect("must succeed");
         assert_eq!(&res, "帀");
-        let decrypted = cipher.decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res, Standard {}).expect("must succeed");
         assert_eq!(decrypted, "x");
     }
 }
 
 #[cfg(test)]
 mod extended_tests {
-    use super::{Cipher, Extended};
+    use super::Extended;
+    use crate::decrypt::decrypt_string;
     use crate::encrypt::encrypt_string;
 
     #[test]
@@ -243,19 +165,17 @@ mod extended_tests {
         // b3 = 10100100
         // code point = 0 0001 0011 1000 0110 0100
         // code point =   1    3    8    6    4
-        let cipher = Cipher::new(Extended {});
         let res = encrypt_string("ad", Extended {}).expect("must succeed");
         assert_eq!(res, "\u{13864}");
-        let decrypted = cipher.decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res, Extended {}).expect("must succeed");
         assert_eq!(decrypted, "ad");
     }
 
     #[test]
     fn even_length_string() {
-        let cipher = Cipher::new(Extended {});
         let res = encrypt_string("adgc", Extended {}).expect("must succeed");
         assert_eq!(res, "\u{13864}\u{139e3}");
-        let decrypted = cipher.decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res, Extended {}).expect("must succeed");
         assert_eq!(decrypted, "adgc");
     }
 
@@ -286,19 +206,17 @@ mod extended_tests {
         // b3 = 10000000
         // code point = 0 0001 0101 1000 1000 0000
         // code point =   1    5    8    8    0
-        let cipher = Cipher::new(Extended {});
         let res = encrypt_string("bbb", Extended {}).expect("must succeed");
         assert_eq!(res, "\u{138a2}\u{15880}");
-        let decrypted = cipher.decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res, Extended {}).expect("must succeed");
         assert_eq!(decrypted, "bbb");
     }
 
     #[test]
     fn single_char_string() {
-        let cipher = Cipher::new(Extended {});
         let res = encrypt_string("x", Extended {}).expect("must succeed");
         assert_eq!(res, "\u{15e00}");
-        let decrypted = cipher.decrypt_string(&res).expect("must succeed");
+        let decrypted = decrypt_string(&res, Extended {}).expect("must succeed");
         assert_eq!(decrypted, "x");
     }
 }
