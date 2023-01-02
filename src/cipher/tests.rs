@@ -1,5 +1,46 @@
+use super::{Cipher, Decrypter, Encrypter};
+use anyhow::Result;
+use std::io::Cursor;
+
+fn encrypt_string<C, const N: usize>(to_encrypt: &str, cipher: C) -> Result<String>
+where
+    C: Cipher<N>,
+{
+    let input = Cursor::new(to_encrypt);
+    let buf_size = encrypt_size::<N>(to_encrypt.as_bytes().len());
+    let mut result = Vec::with_capacity(buf_size);
+    Encrypter::new(&mut result, cipher).encrypt(input)?;
+    Ok(String::from_utf8(result)?)
+}
+
+fn encrypt_size<const N: usize>(num_bytes: usize) -> usize {
+    let num_encrypted_chars_needed = if num_bytes % 2 == 0 {
+        num_bytes / 2
+    } else {
+        (num_bytes / 2) + 1
+    };
+    return num_encrypted_chars_needed * N;
+}
+
+fn decrypt_string<C, const N: usize>(to_decrypt: &str, cipher: C) -> Result<String>
+where
+    C: Cipher<N>,
+{
+    let input = Cursor::new(to_decrypt);
+    let buf_size = decrypt_size::<N>(to_decrypt.as_bytes().len());
+    let mut result = Vec::with_capacity(buf_size);
+    Decrypter::new(&mut result, cipher).decrypt(input)?;
+    Ok(String::from_utf8(result)?)
+}
+
+fn decrypt_size<const N: usize>(num_bytes: usize) -> usize {
+    let num_encrypted_chars = num_bytes / N;
+    return num_encrypted_chars * 2;
+}
+
 mod standard_tests {
-    use crate::cipher::{decrypt_string, encrypt_string, Standard};
+    use super::{decrypt_string, encrypt_string};
+    use crate::cipher::Standard;
 
     #[test]
     fn single_char_pair() {
@@ -35,7 +76,8 @@ mod standard_tests {
 }
 
 mod extended_tests {
-    use crate::cipher::{decrypt_string, encrypt_string, Extended};
+    use super::{decrypt_string, encrypt_string};
+    use crate::cipher::Extended;
 
     #[test]
     fn single_char_pair() {

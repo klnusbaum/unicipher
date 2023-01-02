@@ -1,6 +1,6 @@
 use crate::cipher::Cipher;
 use anyhow::{Error, Result};
-use std::io::{Bytes, Cursor, Read, Write};
+use std::io::{Bytes, Read, Write};
 
 pub struct Decrypter<W, C, const N: usize> {
     to: W,
@@ -61,20 +61,4 @@ impl<R: Read, const N: usize> Iterator for NBytes<R, N> {
         }
         Some(Ok(encrypted))
     }
-}
-
-pub fn decrypt_string<C, const N: usize>(to_decrypt: &str, cipher: C) -> Result<String>
-where
-    C: Cipher<N>,
-{
-    let input = Cursor::new(to_decrypt);
-    let buf_size = decrypt_size::<N>(to_decrypt.as_bytes().len());
-    let mut result = Vec::with_capacity(buf_size);
-    Decrypter::new(&mut result, cipher).decrypt(input)?;
-    Ok(String::from_utf8(result)?)
-}
-
-fn decrypt_size<const N: usize>(num_bytes: usize) -> usize {
-    let num_encrypted_chars = num_bytes / N;
-    return num_encrypted_chars * 2;
 }

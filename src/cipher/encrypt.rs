@@ -1,6 +1,6 @@
 use crate::cipher::Cipher;
 use anyhow::Result;
-use std::io::{Cursor, Read, Write};
+use std::io::{Read, Write};
 
 pub struct Encrypter<W, C, const N: usize> {
     to: W,
@@ -26,24 +26,4 @@ impl<W: Write, C: Cipher<N>, const N: usize> Encrypter<W, C, N> {
             self.to.write_all(&encrypted)?;
         }
     }
-}
-
-pub fn encrypt_string<C, const N: usize>(to_encrypt: &str, cipher: C) -> Result<String>
-where
-    C: Cipher<N>,
-{
-    let input = Cursor::new(to_encrypt);
-    let buf_size = encrypt_size::<N>(to_encrypt.as_bytes().len());
-    let mut result = Vec::with_capacity(buf_size);
-    Encrypter::new(&mut result, cipher).encrypt(input)?;
-    Ok(String::from_utf8(result)?)
-}
-
-fn encrypt_size<const N: usize>(num_bytes: usize) -> usize {
-    let num_encrypted_chars_needed = if num_bytes % 2 == 0 {
-        num_bytes / 2
-    } else {
-        (num_bytes / 2) + 1
-    };
-    return num_encrypted_chars_needed * N;
 }

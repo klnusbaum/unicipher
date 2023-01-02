@@ -5,8 +5,8 @@ mod standard;
 #[cfg(test)]
 mod tests;
 
-pub use decrypt::{decrypt_string, Decrypter};
-pub use encrypt::{encrypt_string, Encrypter};
+pub use decrypt::Decrypter;
+pub use encrypt::Encrypter;
 pub use extended::Extended;
 pub use standard::Standard;
 
