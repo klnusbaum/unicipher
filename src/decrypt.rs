@@ -74,7 +74,7 @@ where
     Ok(String::from_utf8(result)?)
 }
 
-const fn decrypt_size<const N: usize>(num_bytes: usize) -> usize {
+fn decrypt_size<const N: usize>(num_bytes: usize) -> usize {
     let num_encrypted_chars = num_bytes / N;
     return num_encrypted_chars * 2;
 }

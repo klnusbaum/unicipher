@@ -39,7 +39,7 @@ where
     Ok(String::from_utf8(result)?)
 }
 
-const fn encrypt_size<const N: usize>(num_bytes: usize) -> usize {
+fn encrypt_size<const N: usize>(num_bytes: usize) -> usize {
     let num_encrypted_chars_needed = if num_bytes % 2 == 0 {
         num_bytes / 2
     } else {
