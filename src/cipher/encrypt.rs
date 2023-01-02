@@ -17,7 +17,7 @@ impl<W: Write, C: Cipher<N>, const N: usize> Encrypter<W, C, N> {
     where
         R: Read,
     {
-        for byte_pair in BytePairs::new(reader.bytes()) {
+        for byte_pair in BytePairs::new(reader) {
             let encrypted = match byte_pair {
                 (c0, Some(c1)) => self.cipher.encrypt_char_pair(c0?, c1?),
                 (c0, None) => self.cipher.encrypt_char(c0?),
@@ -33,9 +33,9 @@ struct BytePairs<R> {
 }
 
 impl<R: Read> BytePairs<R> {
-    fn new(bytes: Bytes<R>) -> Self {
+    fn new(reader: R) -> Self {
         BytePairs {
-            bytes: bytes.fuse(),
+            bytes: reader.bytes().fuse(),
         }
     }
 }

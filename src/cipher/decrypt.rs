@@ -16,7 +16,7 @@ impl<W: Write, C: Cipher<N>, const N: usize> Decrypter<W, C, N> {
     where
         R: Read,
     {
-        for encrypted in NBytes::new(reader.bytes()) {
+        for encrypted in NBytes::new(reader) {
             let encrypted = encrypted?;
             if self.cipher.has_single_char(encrypted) {
                 let bytes = self.cipher.decrypt_char(encrypted);
@@ -31,12 +31,14 @@ impl<W: Write, C: Cipher<N>, const N: usize> Decrypter<W, C, N> {
 }
 
 struct NBytes<R: Read, const N: usize> {
-    inner: Bytes<R>,
+    bytes: Bytes<R>,
 }
 
 impl<R: Read, const N: usize> NBytes<R, N> {
-    fn new(inner: Bytes<R>) -> NBytes<R, N> {
-        NBytes { inner }
+    fn new(reader: R) -> NBytes<R, N> {
+        NBytes {
+            bytes: reader.bytes(),
+        }
     }
 
     fn insufficent_bytes(num_bytes: usize) -> Result<[u8; N]> {
