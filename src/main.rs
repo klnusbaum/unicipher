@@ -62,30 +62,30 @@ impl Cli {
         }
     }
 
-    fn write<R, W>(&self, reader: R, mut writer: W) -> Result<()>
+    fn write<R, W>(&self, from: R, mut to: W) -> Result<()>
     where
         R: Read,
         W: Write + Finish,
     {
         match self.cipher {
-            CipherType::Standard => self.cipher(reader, &mut writer, Standard {})?,
-            CipherType::Extended => self.cipher(reader, &mut writer, Extended {})?,
+            CipherType::Standard => self.cipher(from, &mut to, Standard {})?,
+            CipherType::Extended => self.cipher(from, &mut to, Extended {})?,
         }
 
-        writer.flush()?;
-        writer.finish()
+        to.flush()?;
+        to.finish()
     }
 
-    fn cipher<R, W, C, const N: usize>(&self, reader: R, writer: W, cipher: C) -> Result<()>
+    fn cipher<R, W, C, const N: usize>(&self, from: R, to: W, cipher: C) -> Result<()>
     where
         R: Read,
         W: Write,
         C: Cipher<N>,
     {
         if self.encrypt {
-            Encrypter::new(writer, cipher).encrypt(reader)
+            Encrypter::new(to, cipher).encrypt(from)
         } else {
-            Decrypter::new(writer, cipher).decrypt(reader)
+            Decrypter::new(to, cipher).decrypt(from)
         }
     }
 }
