@@ -3,27 +3,27 @@ use anyhow::{Error, Result};
 use std::io::{Bytes, Read, Write};
 
 pub struct Decrypter<W, C, const N: usize> {
-    to: W,
+    writer: W,
     cipher: C,
 }
 
 impl<W: Write, C: Cipher<N>, const N: usize> Decrypter<W, C, N> {
-    pub fn new(to: W, cipher: C) -> Self {
-        Decrypter { to, cipher }
+    pub fn new(writer: W, cipher: C) -> Self {
+        Decrypter { writer, cipher }
     }
 
-    pub fn decrypt<R>(&mut self, from: R) -> Result<()>
+    pub fn decrypt<R>(&mut self, reader: R) -> Result<()>
     where
         R: Read,
     {
-        for encrypted in NBytes::new(from.bytes()) {
+        for encrypted in NBytes::new(reader.bytes()) {
             let encrypted = encrypted?;
             if self.cipher.has_single_char(encrypted) {
                 let bytes = self.cipher.decrypt_char(encrypted);
-                self.to.write_all(&bytes)?;
+                self.writer.write_all(&bytes)?;
             } else {
                 let bytes = self.cipher.decrypt_char_pair(encrypted);
-                self.to.write_all(&bytes)?;
+                self.writer.write_all(&bytes)?;
             };
         }
         Ok(())

@@ -4,25 +4,25 @@ use std::io::{Bytes, Read, Write};
 use std::iter::Fuse;
 
 pub struct Encrypter<W, C, const N: usize> {
-    to: W,
+    writer: W,
     cipher: C,
 }
 
 impl<W: Write, C: Cipher<N>, const N: usize> Encrypter<W, C, N> {
-    pub fn new(to: W, cipher: C) -> Self {
-        Encrypter { to, cipher }
+    pub fn new(writer: W, cipher: C) -> Self {
+        Encrypter { writer, cipher }
     }
 
-    pub fn encrypt<R>(&mut self, from: R) -> Result<()>
+    pub fn encrypt<R>(&mut self, reader: R) -> Result<()>
     where
         R: Read,
     {
-        for byte_pair in BytePairs::new(from.bytes()) {
+        for byte_pair in BytePairs::new(reader.bytes()) {
             let encrypted = match byte_pair {
                 (c0, Some(c1)) => self.cipher.encrypt_char_pair(c0?, c1?),
                 (c0, None) => self.cipher.encrypt_char(c0?),
             };
-            self.to.write_all(&encrypted)?;
+            self.writer.write_all(&encrypted)?;
         }
         Ok(())
     }
