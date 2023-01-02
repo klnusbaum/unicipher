@@ -68,25 +68,21 @@ impl Cli {
         W: Write + Finish,
     {
         match self.cipher {
-            CipherType::Standard => self.cipher(reader, &mut writer, Cipher::new(Standard {}))?,
-            CipherType::Extended => self.cipher(reader, &mut writer, Cipher::new(Extended {}))?,
+            CipherType::Standard => self.cipher(reader, &mut writer, Standard {})?,
+            CipherType::Extended => self.cipher(reader, &mut writer, Extended {})?,
         }
 
         writer.flush()?;
         writer.finish()
     }
 
-    fn cipher<R, W, A, const N: usize>(
-        &self,
-        reader: R,
-        mut writer: W,
-        cipher: Cipher<A, N>,
-    ) -> Result<()>
+    fn cipher<R, W, A, const N: usize>(&self, reader: R, mut writer: W, alrogithm: A) -> Result<()>
     where
         R: Read,
         W: Write,
         A: Algorithm<N>,
     {
+        let cipher = Cipher::new(alrogithm);
         if self.encrypt {
             cipher.encrypt(reader, &mut writer)
         } else {
