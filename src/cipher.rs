@@ -8,7 +8,9 @@ const SINGLE_CHAR_MASK: u8 = 4;
 pub trait Algorithm<const N: usize> {
     fn encrypt_char_pair(&self, c0: u8, c1: u8) -> [u8; N];
     fn encrypt_single_char(&self, c0: u8) -> [u8; N];
-    fn decrypt_chars(&self, encrypted: [u8; N]) -> (u8, Option<u8>);
+    fn decrypt_single_char(&self, encrypted: [u8; N]) -> u8;
+    fn decrypt_char_pair(&self, encrypted: [u8; N]) -> (u8, u8);
+    fn has_single_char(&self, encrypted: [u8; N]) -> bool;
 }
 
 pub struct Cipher<A: Algorithm<N>, const N: usize> {
@@ -42,12 +44,21 @@ impl<A: Algorithm<N>, const N: usize> Cipher<A, N> {
         W: Write,
     {
         for encrypted in NBytes::new(from.bytes()) {
-            match self.algorithm.decrypt_chars(encrypted?) {
+            match self.decrypt_chars(encrypted?) {
                 (c0, Some(c1)) => to.write_all(&[c0, c1])?,
                 (c0, None) => to.write_all(&[c0])?,
             }
         }
         Ok(())
+    }
+
+    fn decrypt_chars(&self, encrypted: [u8; N]) -> (u8, Option<u8>) {
+        if self.algorithm.has_single_char(encrypted) {
+            (self.algorithm.decrypt_single_char(encrypted), None)
+        } else {
+            let (c0, c1) = self.algorithm.decrypt_char_pair(encrypted);
+            (c0, Some(c1))
+        }
     }
 
     pub fn encrypt_string(&self, to_encrypt: &str) -> Result<String> {
@@ -117,24 +128,6 @@ impl<R: Read, const N: usize> Iterator for NBytes<R, N> {
 
 pub struct Standard {}
 
-impl Standard {
-    fn decrypt_single_char(encrypted: [u8; 3]) -> u8 {
-        let sig_bit = (encrypted[0] & 1) << 6;
-        let lower = encrypted[1] & LOWER_BITS_MASK;
-        return sig_bit | lower;
-    }
-
-    fn decrypt_char_pair(encrypted: [u8; 3]) -> (u8, u8) {
-        let c0_sig_bit = (encrypted[0] & 2) << 5;
-        let c1_sig_bit = (encrypted[0] & 1) << 6;
-        let c0_lower = encrypted[1] & LOWER_BITS_MASK;
-        let c1_lower = encrypted[2] & LOWER_BITS_MASK;
-        let c0 = c0_sig_bit | c0_lower;
-        let c1 = c1_sig_bit | c1_lower;
-        return (c0, c1);
-    }
-}
-
 impl Algorithm<3> for Standard {
     fn encrypt_char_pair(&self, c0: u8, c1: u8) -> [u8; 3] {
         let mut encrypted_char = [0, 0, 0];
@@ -158,35 +151,28 @@ impl Algorithm<3> for Standard {
         return encrypted_char;
     }
 
-    fn decrypt_chars(&self, encrypted: [u8; 3]) -> (u8, Option<u8>) {
-        if encrypted[0] & SINGLE_CHAR_MASK != 0 {
-            (Self::decrypt_single_char(encrypted), None)
-        } else {
-            let (c0, c1) = Self::decrypt_char_pair(encrypted);
-            (c0, Some(c1))
-        }
-    }
-}
-
-pub struct Extended {}
-
-impl Extended {
-    fn decrypt_single_char(encrypted: [u8; 4]) -> u8 {
-        let sig_bit = (encrypted[1] & 1) << 6;
-        let lower = encrypted[2] & LOWER_BITS_MASK;
-        return sig_bit | lower;
-    }
-
-    fn decrypt_char_pair(encrypted: [u8; 4]) -> (u8, u8) {
-        let c0_sig_bit = (encrypted[1] & 2) << 5;
-        let c1_sig_bit = (encrypted[1] & 1) << 6;
-        let c0_lower = encrypted[2] & LOWER_BITS_MASK;
-        let c1_lower = encrypted[3] & LOWER_BITS_MASK;
+    fn decrypt_char_pair(&self, encrypted: [u8; 3]) -> (u8, u8) {
+        let c0_sig_bit = (encrypted[0] & 2) << 5;
+        let c1_sig_bit = (encrypted[0] & 1) << 6;
+        let c0_lower = encrypted[1] & LOWER_BITS_MASK;
+        let c1_lower = encrypted[2] & LOWER_BITS_MASK;
         let c0 = c0_sig_bit | c0_lower;
         let c1 = c1_sig_bit | c1_lower;
         return (c0, c1);
     }
+
+    fn decrypt_single_char(&self, encrypted: [u8; 3]) -> u8 {
+        let sig_bit = (encrypted[0] & 1) << 6;
+        let lower = encrypted[1] & LOWER_BITS_MASK;
+        return sig_bit | lower;
+    }
+
+    fn has_single_char(&self, encrypted: [u8; 3]) -> bool {
+        encrypted[0] & SINGLE_CHAR_MASK != 0
+    }
 }
+
+pub struct Extended {}
 
 impl Algorithm<4> for Extended {
     fn encrypt_char_pair(&self, c0: u8, c1: u8) -> [u8; 4] {
@@ -213,13 +199,24 @@ impl Algorithm<4> for Extended {
         return encrypted_char;
     }
 
-    fn decrypt_chars(&self, encrypted: [u8; 4]) -> (u8, Option<u8>) {
-        if encrypted[1] & SINGLE_CHAR_MASK != 0 {
-            (Self::decrypt_single_char(encrypted), None)
-        } else {
-            let (c0, c1) = Self::decrypt_char_pair(encrypted);
-            (c0, Some(c1))
-        }
+    fn decrypt_char_pair(&self, encrypted: [u8; 4]) -> (u8, u8) {
+        let c0_sig_bit = (encrypted[1] & 2) << 5;
+        let c1_sig_bit = (encrypted[1] & 1) << 6;
+        let c0_lower = encrypted[2] & LOWER_BITS_MASK;
+        let c1_lower = encrypted[3] & LOWER_BITS_MASK;
+        let c0 = c0_sig_bit | c0_lower;
+        let c1 = c1_sig_bit | c1_lower;
+        return (c0, c1);
+    }
+
+    fn decrypt_single_char(&self, encrypted: [u8; 4]) -> u8 {
+        let sig_bit = (encrypted[1] & 1) << 6;
+        let lower = encrypted[2] & LOWER_BITS_MASK;
+        return sig_bit | lower;
+    }
+
+    fn has_single_char(&self, encrypted: [u8; 4]) -> bool {
+        encrypted[1] & SINGLE_CHAR_MASK != 0
     }
 }
 
