@@ -4,6 +4,7 @@ const SIG_BIT_MASK: u8 = 127;
 const LOWER_BITS_MASK: u8 = 63;
 const SINGLE_CHAR_MASK: u8 = 4;
 
+#[derive(Copy, Clone)]
 pub struct Standard {}
 
 impl Cipher<3> for Standard {
