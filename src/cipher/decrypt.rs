@@ -55,7 +55,7 @@ impl<R: Read, const N: usize> Iterator for NBytes<R, N> {
     fn next(&mut self) -> Option<Result<[u8; N]>> {
         let mut encrypted = [0; N];
         for i in 0..N {
-            match self.inner.next() {
+            match self.bytes.next() {
                 Some(Ok(byte)) => encrypted[i] = byte,
                 None if i == 0 => return None,
                 Some(Err(e)) => return Some(Err(Error::new(e))),

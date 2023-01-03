@@ -35,6 +35,11 @@ struct BytePairs<R> {
 impl<R: Read> BytePairs<R> {
     fn new(reader: R) -> Self {
         BytePairs {
+            // N.B. Bytes can theoretically return a Some after having returned a None.
+            // This is because the underlying reader
+            // may return 0 on a read call, but then start returning data again.
+            // We use a Fuse so that as soon as we see a None from the Bytes iterator,
+            // we consider ourself to be done.
             bytes: reader.bytes().fuse(),
         }
     }
