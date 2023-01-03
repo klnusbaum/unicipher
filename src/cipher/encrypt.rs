@@ -36,8 +36,13 @@ impl<R: Read> BytePairs<R> {
     fn new(reader: R) -> Self {
         BytePairs {
             // N.B. Bytes can theoretically return a Some after having returned a None.
-            // This is because the underlying reader
-            // may return 0 on a read call, but then start returning data again.
+            // This is a general property of iterators, but is of specific concern for Bytes.
+            // The underlying reader may return 0 on a read call,
+            // but then start returning data again.
+            // This would screw up our pair logic, which can't handle when the first
+            // byte is None, but the second byte is Some.
+            // (a BytePair always needs a first byte, only the second byte it optional).
+            //
             // We use a Fuse so that as soon as we see a None from the Bytes iterator,
             // we consider ourself to be done.
             bytes: reader.bytes().fuse(),
