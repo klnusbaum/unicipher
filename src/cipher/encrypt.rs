@@ -18,9 +18,9 @@ impl<W: Write, C: Cipher<N>, const N: usize> Encrypter<W, C, N> {
         R: Read,
     {
         for byte_pair in BytePairs::new(reader) {
-            let encrypted = match byte_pair {
-                (c0, Some(c1)) => self.cipher.encrypt_char_pair(c0?, c1?),
-                (c0, None) => self.cipher.encrypt_char(c0?),
+            let encrypted = match byte_pair? {
+                (c0, Some(c1)) => self.cipher.encrypt_char_pair(c0, Some(c1)),
+                (c0, None) => self.cipher.encrypt_char_pair(c0, None),
             };
             self.writer.write_all(&encrypted)?;
         }
@@ -48,18 +48,23 @@ impl<R: Read> BytePairs<R> {
             bytes: reader.bytes().fuse(),
         }
     }
-}
 
-impl<R: Read> Iterator for BytePairs<R> {
-    type Item = BytePair;
-
-    fn next(&mut self) -> Option<BytePair> {
+    fn next_pair(&mut self) -> Result<Option<BytePair>> {
         match (self.bytes.next(), self.bytes.next()) {
-            (Some(b0), Some(b1)) => Some((b0, Some(b1))),
-            (Some(b0), None) => Some((b0, None)),
-            _ => None,
+            (Some(b0), Some(b1)) => Ok(Some((b0?, Some(b1?)))),
+            (Some(b0), None) => Ok(Some((b0?, None))),
+            _ => Ok(None),
         }
     }
 }
 
-type BytePair = (std::io::Result<u8>, Option<std::io::Result<u8>>);
+impl<R: Read> Iterator for BytePairs<R> {
+    type Item = Result<BytePair>;
+
+    fn next(&mut self) -> Option<Result<BytePair>> {
+        self.next_pair().transpose()
+    }
+}
+
+// type BytePair = (std::io::Result<u8>, Option<std::io::Result<u8>>);
+type BytePair = (u8, Option<u8>);
