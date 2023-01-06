@@ -50,11 +50,12 @@ impl<R: Read> BytePairs<R> {
     }
 
     fn next_pair(&mut self) -> Result<Option<BytePair>> {
-        match (self.bytes.next(), self.bytes.next()) {
-            (Some(b0), Some(b1)) => Ok(Some((b0?, Some(b1?)))),
-            (Some(b0), None) => Ok(Some((b0?, None))),
-            _ => Ok(None),
-        }
+        let pair = match (self.bytes.next(), self.bytes.next()) {
+            (Some(b0), Some(b1)) => Some((b0?, Some(b1?))),
+            (Some(b0), None) => Some((b0?, None)),
+            _ => None,
+        };
+        Ok(pair)
     }
 }
 
