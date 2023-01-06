@@ -9,7 +9,6 @@ pub struct Standard {}
 
 impl Cipher<3> for Standard {
     fn encrypt_char_pair(&self, c0: u8, c1: Option<u8>) -> [u8; 3] {
-        // 01100010 b
         let mut encrypted_char = [0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
         let low_0 = c0 & LOWER_BITS_MASK;
@@ -23,9 +22,6 @@ impl Cipher<3> for Standard {
         } else {
             encrypted_char[0] = encrypted_char[0] | SINGLE_CHAR_MASK;
             encrypted_char[2] = 0b1000_0000;
-        }
-        for i in 0..3 {
-            println!("{:b}", encrypted_char[i]);
         }
         return encrypted_char;
     }
