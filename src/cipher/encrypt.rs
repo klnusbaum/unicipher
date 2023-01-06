@@ -66,5 +66,4 @@ impl<R: Read> Iterator for BytePairs<R> {
     }
 }
 
-// type BytePair = (std::io::Result<u8>, Option<std::io::Result<u8>>);
 type BytePair = (u8, Option<u8>);
