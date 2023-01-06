@@ -24,7 +24,7 @@ impl Cipher<3> for Standard {
         let mut encrypted_char = [0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
         let low_0 = c0 & LOWER_BITS_MASK;
-        encrypted_char[0] = 224 | SINGLE_CHAR_MASK | (sig_0 >> 6);
+        encrypted_char[0] = 224 | SINGLE_CHAR_MASK | (sig_0 >> 5);
         encrypted_char[1] = 128 | low_0;
         encrypted_char[2] = 128;
         return encrypted_char;
@@ -41,7 +41,7 @@ impl Cipher<3> for Standard {
     }
 
     fn decrypt_char(&self, encrypted: [u8; 3]) -> [u8; 1] {
-        let sig_bit = (encrypted[0] & 1) << 6;
+        let sig_bit = (encrypted[0] & 2) << 5;
         let lower = encrypted[1] & LOWER_BITS_MASK;
         return [sig_bit | lower];
     }

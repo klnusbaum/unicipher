@@ -26,7 +26,7 @@ impl Cipher<4> for Extended {
         let sig_0 = c0 & SIG_BIT_MASK;
         let low_0 = c0 & LOWER_BITS_MASK;
         encrypted_char[0] = 240;
-        encrypted_char[1] = 144 | SINGLE_CHAR_MASK | (sig_0 >> 6);
+        encrypted_char[1] = 144 | SINGLE_CHAR_MASK | (sig_0 >> 5);
         encrypted_char[2] = 128 | low_0;
         encrypted_char[3] = 128;
         return encrypted_char;
@@ -43,7 +43,7 @@ impl Cipher<4> for Extended {
     }
 
     fn decrypt_char(&self, encrypted: [u8; 4]) -> [u8; 1] {
-        let sig_bit = (encrypted[1] & 1) << 6;
+        let sig_bit = (encrypted[1] & 2) << 5;
         let lower = encrypted[2] & LOWER_BITS_MASK;
         return [sig_bit | lower];
     }
