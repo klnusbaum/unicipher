@@ -12,18 +12,18 @@ impl Cipher<4> for Extended {
         let mut encrypted_char = [0, 0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
         let low_0 = c0 & LOWER_BITS_MASK;
-        encrypted_char[0] = 240;
-        encrypted_char[1] = 144 | (sig_0 >> 5);
-        encrypted_char[2] = 128 | low_0;
+        encrypted_char[0] = 0b1111_0000;
+        encrypted_char[1] = 0b1001_0000 | (sig_0 >> 5);
+        encrypted_char[2] = 0b1000_0000 | low_0;
 
         if let Some(c1) = c1 {
             let sig_1 = c1 & SIG_BIT_MASK;
             let low_1 = c1 & LOWER_BITS_MASK;
             encrypted_char[1] = encrypted_char[1] | (sig_1 >> 6);
-            encrypted_char[3] = 128 | low_1;
+            encrypted_char[3] = 0b1000_0000 | low_1;
         } else {
             encrypted_char[1] = encrypted_char[1] | SINGLE_CHAR_MASK;
-            encrypted_char[3] = 128;
+            encrypted_char[3] = 0b1000_0000;
         }
         return encrypted_char;
     }

@@ -13,16 +13,16 @@ impl Cipher<3> for Standard {
         let mut encrypted_char = [0, 0, 0];
         let sig_0 = c0 & SIG_BIT_MASK;
         let low_0 = c0 & LOWER_BITS_MASK;
-        encrypted_char[0] = 224 | (sig_0 >> 5);
-        encrypted_char[1] = 128 | low_0;
+        encrypted_char[0] = 0b1110_0000 | (sig_0 >> 5);
+        encrypted_char[1] = 0b1000_0000 | low_0;
         if let Some(c1) = c1 {
             let sig_1 = c1 & SIG_BIT_MASK;
             let low_1 = c1 & LOWER_BITS_MASK;
             encrypted_char[0] = encrypted_char[0] | (sig_1 >> 6);
-            encrypted_char[2] = 128 | low_1;
+            encrypted_char[2] = 0b1000_0000 | low_1;
         } else {
             encrypted_char[0] = encrypted_char[0] | SINGLE_CHAR_MASK;
-            encrypted_char[2] = 128;
+            encrypted_char[2] = 0b1000_0000;
         }
         for i in 0..3 {
             println!("{:b}", encrypted_char[i]);
