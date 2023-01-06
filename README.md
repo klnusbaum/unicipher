@@ -1,8 +1,8 @@
 # UniCipher 𓂀 
 A smiple utf8 cipher.
 
-Don't use for anything that actually requires good security.
-This is a toy.
+This is a joke. See https://www.knusbaum.org/posts/unicipher for more infomation.
+Don't actually use this for encryption or anything that ever touches production.
 
 # Usage
 UniCipher can be used to encrypt or decrypt text, to and from UTF-8 characters:
