@@ -1,6 +1,6 @@
 use super::Cipher;
 
-const SIG_BIT_MASK: u8 = 127;
+const SIG_BIT_MASK: u8 = 64;
 const LOWER_BITS_MASK: u8 = 63;
 const SINGLE_CHAR_MASK: u8 = 4;
 

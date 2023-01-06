@@ -13,7 +13,7 @@ fn extended_tests() {
 }
 
 fn test_suite<C: Cipher<N>, const N: usize>(cipher: C) {
-    let test_cases = ["ad", "adgc", "bbb", "x", "another"];
+    let test_cases = ["ad", "adgc", "bbb", "x", "another", "hello there"];
     for case in test_cases {
         let encrypted = encrypt_string(case, cipher).expect("encryption failed");
         let decrypted = decrypt_string(&encrypted, cipher).expect("decryption failed");
