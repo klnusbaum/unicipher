@@ -1,4 +1,4 @@
-use super::{Cipher, Decrypter, Encrypter, Extended, Standard};
+use super::{Cipher, Decrypter, Extended, Standard};
 use anyhow::Result;
 use std::io::Cursor;
 
@@ -28,7 +28,7 @@ where
     let reader = Cursor::new(to_encrypt);
     let buf_size = encrypt_size::<N>(to_encrypt);
     let mut result = Vec::with_capacity(buf_size);
-    Encrypter::new(&mut result, cipher).encrypt(reader)?;
+    cipher.encrypt(reader, &mut result)?;
     Ok(String::from_utf8(result)?)
 }
 

@@ -1,37 +1,13 @@
-use crate::cipher::Cipher;
 use anyhow::Result;
-use std::io::{Bytes, Read, Write};
+use std::io::{Bytes, Read};
 use std::iter::Fuse;
 
-pub struct Encrypter<W, C, const N: usize> {
-    writer: W,
-    cipher: C,
-}
-
-impl<W: Write, C: Cipher<N>, const N: usize> Encrypter<W, C, N> {
-    pub fn new(writer: W, cipher: C) -> Self {
-        Encrypter { writer, cipher }
-    }
-
-    pub fn encrypt<R>(&mut self, reader: R) -> Result<()>
-    where
-        R: Read,
-    {
-        for byte_pair in BytePairs::new(reader) {
-            let byte_pair = byte_pair?;
-            let encrypted = self.cipher.encrypt_char_pair(byte_pair.0, byte_pair.1);
-            self.writer.write_all(&encrypted)?;
-        }
-        Ok(())
-    }
-}
-
-struct BytePairs<R> {
+pub struct BytePairs<R> {
     bytes: Fuse<Bytes<R>>,
 }
 
 impl<R: Read> BytePairs<R> {
-    fn new(reader: R) -> Self {
+    pub fn new(reader: R) -> Self {
         BytePairs {
             // N.B. Bytes can theoretically return a Some after having returned a None.
             // This is a general property of iterators, but is of specific concern for Bytes.

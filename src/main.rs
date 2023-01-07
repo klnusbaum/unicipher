@@ -1,7 +1,7 @@
 mod cipher;
 
 use anyhow::Result;
-use cipher::{Cipher, Decrypter, Encrypter, Extended, Standard};
+use cipher::{Cipher, Decrypter, Extended, Standard};
 use clap::{ArgGroup, Parser};
 use std::fs::{File, OpenOptions};
 use std::io::{stdin, stdout, BufReader, BufWriter, Cursor, Read, Stdin, Stdout, Write};
@@ -83,7 +83,7 @@ impl Cli {
         C: Cipher<N>,
     {
         if self.encrypt {
-            Encrypter::new(writer, cipher).encrypt(reader)
+            cipher.encrypt(reader, writer)
         } else {
             Decrypter::new(writer, cipher).decrypt(reader)
         }
