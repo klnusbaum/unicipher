@@ -1,3 +1,4 @@
+use super::BytePair;
 use anyhow::Result;
 use std::io::{Bytes, Read};
 use std::iter::Fuse;
@@ -40,5 +41,3 @@ impl<R: Read> Iterator for BytePairs<R> {
         self.next_pair().transpose()
     }
 }
-
-type BytePair = (u8, Option<u8>);
