@@ -18,10 +18,8 @@ impl<W: Write, C: Cipher<N>, const N: usize> Encrypter<W, C, N> {
         R: Read,
     {
         for byte_pair in BytePairs::new(reader) {
-            let encrypted = match byte_pair? {
-                (c0, Some(c1)) => self.cipher.encrypt_char_pair(c0, Some(c1)),
-                (c0, None) => self.cipher.encrypt_char_pair(c0, None),
-            };
+            let byte_pair = byte_pair?;
+            let encrypted = self.cipher.encrypt_char_pair(byte_pair.0, byte_pair.1);
             self.writer.write_all(&encrypted)?;
         }
         Ok(())
