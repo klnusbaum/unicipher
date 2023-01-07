@@ -11,13 +11,6 @@ impl<R: Read, const N: usize> NBytes<R, N> {
             bytes: reader.bytes(),
         }
     }
-
-    fn insufficent_bytes(num_bytes: usize) -> Result<[u8; N]> {
-        Err(Error::msg(format!(
-            "expected utf-8 character of {} bytes but found character with only {} byte(s)",
-            N, num_bytes
-        )))
-    }
 }
 
 impl<R: Read, const N: usize> Iterator for NBytes<R, N> {
@@ -30,9 +23,16 @@ impl<R: Read, const N: usize> Iterator for NBytes<R, N> {
                 Some(Ok(byte)) => encrypted[i] = byte,
                 None if i == 0 => return None,
                 Some(Err(e)) => return Some(Err(Error::new(e))),
-                None => return Some(Self::insufficent_bytes(i)),
+                None => return Some(insufficent_bytes(i)),
             }
         }
         Some(Ok(encrypted))
     }
+}
+
+fn insufficent_bytes<const N: usize>(num_bytes: usize) -> Result<[u8; N]> {
+    Err(Error::msg(format!(
+        "expected utf-8 character of {} bytes but found character with only {} byte(s)",
+        N, num_bytes
+    )))
 }
