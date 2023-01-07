@@ -1,4 +1,4 @@
-use super::{Cipher, Decrypter, Extended, Standard};
+use super::{Cipher, Extended, Standard};
 use anyhow::Result;
 use std::io::Cursor;
 
@@ -15,13 +15,13 @@ fn extended_tests() {
 fn test_suite<C: Cipher<N>, const N: usize>(cipher: C) {
     let test_cases = ["ad", "adgc", "bbb", "x", "another", "hello there"];
     for case in test_cases {
-        let encrypted = encrypt_string(case, cipher).expect("encryption failed");
-        let decrypted = decrypt_string(&encrypted, cipher).expect("decryption failed");
+        let encrypted = encrypt_string(case, &cipher).expect("encryption failed");
+        let decrypted = decrypt_string(&encrypted, &cipher).expect("decryption failed");
         assert_eq!(case, decrypted);
     }
 }
 
-fn encrypt_string<C, const N: usize>(to_encrypt: &str, cipher: C) -> Result<String>
+fn encrypt_string<C, const N: usize>(to_encrypt: &str, cipher: &C) -> Result<String>
 where
     C: Cipher<N>,
 {
@@ -42,14 +42,14 @@ fn encrypt_size<const N: usize>(to_encrypt: &str) -> usize {
     return num_encrypted_chars_needed * N;
 }
 
-fn decrypt_string<C, const N: usize>(to_decrypt: &str, cipher: C) -> Result<String>
+fn decrypt_string<C, const N: usize>(to_decrypt: &str, cipher: &C) -> Result<String>
 where
     C: Cipher<N>,
 {
     let reader = Cursor::new(to_decrypt);
     let buf_size = decrypt_size::<N>(to_decrypt);
     let mut result = Vec::with_capacity(buf_size);
-    Decrypter::new(&mut result, cipher).decrypt(reader)?;
+    cipher.decrypt(reader, &mut result)?;
     Ok(String::from_utf8(result)?)
 }
 
