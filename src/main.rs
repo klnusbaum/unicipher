@@ -9,17 +9,12 @@ use std::path::{Path, PathBuf};
 
 #[derive(clap::Parser)]
 #[command(author, version, about, long_about = None)]
-#[command(group(
-        ArgGroup::new("action")
-        .multiple(false)
-        .required(true)
-        .args(["decrypt", "encrypt"]),
-        ))]
+#[command(group(ArgGroup::new("action").multiple(false).required(true)))]
 struct Cli {
-    #[arg(short, long)]
+    #[arg(short, long, group = "action")]
     decrypt: bool,
 
-    #[arg(short, long)]
+    #[arg(short, long, group = "action")]
     encrypt: bool,
 
     #[arg(value_enum, short, long, default_value_t = CipherType::Standard)]
