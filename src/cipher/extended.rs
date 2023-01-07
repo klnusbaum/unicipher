@@ -4,7 +4,6 @@ const SIG_BIT_MASK: u8 = 0b0100_0000;
 const LOWER_BITS_MASK: u8 = 0b0011_1111;
 const SINGLE_CHAR_MASK: u8 = 0b0000_0100;
 
-#[derive(Copy, Clone)]
 pub struct Extended {}
 
 impl Cipher<4> for Extended {
