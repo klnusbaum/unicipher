@@ -4,12 +4,12 @@ use std::io::Cursor;
 
 #[test]
 fn standard_tests() {
-    test_suite(Standard {})
+    test_suite(Standard)
 }
 
 #[test]
 fn extended_tests() {
-    test_suite(Extended {})
+    test_suite(Extended)
 }
 
 fn test_suite<C: Cipher<N>, const N: usize>(cipher: C) {
