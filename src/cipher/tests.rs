@@ -30,6 +30,11 @@ macro_rules! cipher_suite {
                 $cipher,
                 "a longer string than most of the others"
             );
+            simple_test!(all_caps, $cipher, "CAPITIALIZED STRING");
+            simple_test!(mixed_caps, $cipher, "MiXeD cApS");
+            simple_test!(special_chars, $cipher, "!@#$%^&*()-_=+|~`,./<>?;':\"[]{}\\");
+            simple_test!(numbers, $cipher, "12345567890");
+            simple_test!(numbers_and_letters, $cipher, "120 mokneys on 40 barrels");
 
             #[test]
             fn ascii_pairs() {
