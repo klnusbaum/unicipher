@@ -1,4 +1,5 @@
 mod cipher;
+mod cipherv2;
 
 use anyhow::Result;
 use cipher::{Cipher, Extended, Standard};
