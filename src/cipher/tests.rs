@@ -21,7 +21,7 @@ fn test_suite<C: Cipher<N>, const N: usize>(cipher: C) {
     }
 }
 
-fn encrypt_string<C, const N: usize>(to_encrypt: &str, cipher: &C) -> Result<String>
+fn encrypt_string<C, const N: usize>(to_encrypt: &str, cipher: C) -> Result<String>
 where
     C: Cipher<N>,
 {
@@ -42,7 +42,7 @@ fn encrypt_size<const N: usize>(to_encrypt: &str) -> usize {
     return num_encrypted_chars_needed * N;
 }
 
-fn decrypt_string<C, const N: usize>(to_decrypt: &str, cipher: &C) -> Result<String>
+fn decrypt_string<C, const N: usize>(to_decrypt: &str, cipher: C) -> Result<String>
 where
     C: Cipher<N>,
 {
