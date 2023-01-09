@@ -46,12 +46,3 @@ pub trait Cipher<const N: usize> {
         Ok(())
     }
 }
-
-impl<C: Cipher<N>, const N: usize> Cipher<N> for &C {
-    fn encrypt_char_pair(&self, pair: BytePair) -> [u8; N] {
-        (**self).encrypt_char_pair(pair)
-    }
-    fn decrypt_char_pair(&self, encrypted: [u8; N]) -> BytePair {
-        (**self).decrypt_char_pair(encrypted)
-    }
-}
