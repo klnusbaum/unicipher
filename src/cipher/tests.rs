@@ -25,6 +25,11 @@ macro_rules! cipher_suite {
             simple_test!(single_character, $cipher, "x");
             simple_test!(another, $cipher, "another");
             simple_test!(with_space, $cipher, "hello there");
+            simple_test!(
+                long_string,
+                $cipher,
+                "a longer string than most of the others"
+            );
 
             #[test]
             fn ascii_pairs() {
