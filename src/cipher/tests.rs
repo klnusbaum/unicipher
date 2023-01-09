@@ -2,22 +2,56 @@ use super::{Cipher, Extended, Standard};
 use anyhow::Result;
 use std::io::Cursor;
 
-#[test]
-fn standard_tests() {
-    test_suite(Standard)
+macro_rules! simple_test {
+    ($name:ident,$cipher:expr,$test_case:literal) => {
+        #[test]
+        fn $name() {
+            let encrypted = encrypt_string($test_case, $cipher).expect("encryption failed");
+            let decrypted = decrypt_string(&encrypted, $cipher).expect("decryption failed");
+            assert_eq!($test_case, decrypted);
+        }
+    };
 }
 
-#[test]
-fn extended_tests() {
-    test_suite(Extended)
+macro_rules! cipher_suite {
+    ($suite_name:ident,$cipher:expr,$cipher_type:ty) => {
+        #[cfg(test)]
+        mod $suite_name {
+            use super::{all_ascii_pairs, decrypt_string, encrypt_string, $cipher_type};
+
+            simple_test!(single_pair, $cipher, "ad");
+            simple_test!(two_pair, $cipher, "adgc");
+            simple_test!(odd_length_string, $cipher, "bbb");
+            simple_test!(single_character, $cipher, "x");
+            simple_test!(another, $cipher, "another");
+            simple_test!(with_space, $cipher, "hello there");
+
+            #[test]
+            fn ascii_pairs() {
+                all_ascii_pairs($cipher);
+            }
+        }
+    };
 }
 
-fn test_suite<C: Cipher<N>, const N: usize>(cipher: C) {
-    let test_cases = ["ad", "adgc", "bbb", "x", "another", "hello there"];
-    for case in test_cases {
-        let encrypted = encrypt_string(case, &cipher).expect("encryption failed");
-        let decrypted = decrypt_string(&encrypted, &cipher).expect("decryption failed");
-        assert_eq!(case, decrypted);
+cipher_suite!(standard_tests, Standard, Standard);
+cipher_suite!(extended_tests, Extended, Extended);
+
+fn all_ascii_pairs<C: Cipher<N>, const N: usize>(cipher: C) {
+    for c0 in 0b0010_0000..0b0111_1111 {
+        for c1 in 0b0010_0000..0b0111_1111 {
+            let byte_pair = (c0, Some(c1));
+            let encrypted = cipher.encrypt_char_pair(byte_pair);
+            let decrypted = cipher.decrypt_char_pair(encrypted);
+            assert_eq!(byte_pair, decrypted);
+        }
+    }
+
+    for c0 in 0b0010_0000..0b0111_1111 {
+        let byte_pair = (c0, None);
+        let encrypted = cipher.encrypt_char_pair(byte_pair);
+        let decrypted = cipher.decrypt_char_pair(encrypted);
+        assert_eq!(byte_pair, decrypted);
     }
 }
 
