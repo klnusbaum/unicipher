@@ -6,13 +6,13 @@ mod standard;
 #[cfg(test)]
 mod tests;
 
-pub use extended::Extended;
-pub use standard::Standard;
-
 use anyhow::Result;
 use bytepairs::BytePairs;
 use nbytes::NBytes;
 use std::io::{Read, Write};
+
+pub use extended::Extended;
+pub use standard::Standard;
 
 pub type BytePair = (u8, Option<u8>);
 
