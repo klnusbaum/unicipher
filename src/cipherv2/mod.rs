@@ -1,14 +1,19 @@
 mod bytepairs;
 mod chars;
+mod simple;
+#[cfg(test)]
+mod tests;
 
 use anyhow::Result;
 use bytepairs::BytePairs;
 use chars::Chars;
 use std::io::{Read, Write};
 
+pub use simple::Simple;
+
 pub type BytePair = (u8, u8);
 
-pub trait Cipher<const N: usize> {
+pub trait CipherV2 {
     fn encrypt_char_pair(&self, pair: BytePair) -> char;
     fn decrypt_char_pair(&self, encrypted: char) -> BytePair;
 

@@ -3,6 +3,7 @@ mod cipherv2;
 
 use anyhow::Result;
 use cipher::{Cipher, Extended, Standard};
+use cipherv2::{CipherV2, Simple};
 use clap::{ArgGroup, Parser};
 use std::fs::{File, OpenOptions};
 use std::io::{stdin, stdout, BufReader, BufWriter, Cursor, Read, Stdin, Stdout, Write};
@@ -34,6 +35,7 @@ struct Cli {
 enum CipherType {
     Standard,
     Extended,
+    Simple,
 }
 
 fn main() -> Result<()> {
@@ -66,6 +68,7 @@ impl Cli {
         match self.cipher {
             CipherType::Standard => self.cipher(reader, &mut writer, Standard {})?,
             CipherType::Extended => self.cipher(reader, &mut writer, Extended {})?,
+            CipherType::Simple => self.cipher_v2(reader, &mut writer, Simple {})?,
         }
 
         writer.flush()?;
@@ -77,6 +80,18 @@ impl Cli {
         R: Read,
         W: Write,
         C: Cipher<N>,
+    {
+        if self.encrypt {
+            cipher.encrypt(reader, writer)
+        } else {
+            cipher.decrypt(reader, writer)
+        }
+    }
+    fn cipher_v2<R, W, C>(&self, reader: R, writer: W, cipher: C) -> Result<()>
+    where
+        R: Read,
+        W: Write,
+        C: CipherV2,
     {
         if self.encrypt {
             cipher.encrypt(reader, writer)
